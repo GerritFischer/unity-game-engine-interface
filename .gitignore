@@ -1,0 +1,10 @@
+*.pyc
+*.csv
+*.mp4
+*.h5
+*.npy
+*.png
+*.pdf
+venv
+*.json
+.mypy_cache
