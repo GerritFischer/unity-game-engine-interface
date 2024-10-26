@@ -1,7 +1,9 @@
 # basic imports
 import socket
+import json
 # framework imports
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
+# typing imports
 from typing import Any, TypedDict
 from numpy.typing import NDArray
 
@@ -40,7 +42,7 @@ class UnitySimulator(Simulator):
                 socketsConnected = True
             except Exception:
                 # if socket connects fails (120s), print error, retry
-                print("Control socket not up yet, retrying...")
+                print("Couldn't connect to unity simulator, retrying...")
 
         print("Unity simulator initialized!")
 
@@ -56,8 +58,9 @@ class UnitySimulator(Simulator):
         ----------
         recieved_echo:       The echo that came back from the simulator
         '''
-        # send plain message for now, will be changed to json command later
-        self.control_socket.send(message.encode('utf-8'))
+        # convert message into formatted json command and send it
+        send_str: str = json.dumps({'command': 'echo', 'param': [message]})
+        self.control_socket.send(send_str.encode('utf-8'))
         recieved_echo: str = self.control_socket.recv(50).decode('utf-8')
 
         return recieved_echo
