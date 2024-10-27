@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using System.Reflection;
 using System.Linq;
 
 public class Main 
@@ -86,12 +87,13 @@ public class Main
             Command json = JsonUtility.FromJson<Command>(message);
             string command= json.command;
             string [] param = json.param;
+            Debug.Log(param.GetType());
             Debug.Log($"Command: {command} with parameters: {string.Join(",", param)}");
 
             if (commands.Contains(command)){
-                Type type = typeof(MyListenerInitializer);
+                Type type = typeof(Main);
                 MethodInfo method = type.GetMethod(command, BindingFlags.Static | BindingFlags.NonPublic);
-                method.Invoke(null, param);
+                method.Invoke(null, new object[]{param});
             }
             else{
                 Debug.Log($"Command:{command} is not defined");
