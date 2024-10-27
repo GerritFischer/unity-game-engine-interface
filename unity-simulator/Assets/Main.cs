@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using System.Linq;
 
 public class Main 
 {
@@ -12,7 +13,7 @@ public class Main
     static private NetworkStream controlStream, videoStream, dataStream;
     static private Thread socketThread;
     static bool connected;
-    
+    static string[] commands={"echo"};
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     static void OnStart()
@@ -82,8 +83,19 @@ public class Main
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received: " + message);
 
-           
-           // Handle JSON command 
+            Command json = JsonUtility.FromJson<Command>(message);
+            string command= json.command;
+            string [] param = json.param;
+            Debug.Log($"Command: {command} with parameters: {string.Join(",", param)}");
+
+            if (commands.Contains(command)){
+                Type type = typeof(MyListenerInitializer);
+                MethodInfo method = type.GetMethod(command, BindingFlags.Static | BindingFlags.NonPublic);
+                method.Invoke(null, param);
+            }
+            else{
+                Debug.Log($"Command:{command} is not defined");
+            }
         }
 
     }
@@ -107,4 +119,15 @@ public class Main
 
     }
 
+    static void echo(string[] param){
+        byte[] responseData = Encoding.UTF8.GetBytes(param[0]);
+        controlStream.Write(responseData, 0, responseData.Length);
+    }
+
+}
+
+[System.Serializable]
+public class Command{
+    public string command;
+    public string[] param;
 }
