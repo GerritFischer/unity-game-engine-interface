@@ -43,12 +43,16 @@ class UnitySimulator(Simulator):
             except Exception:
                 # if socket connects fails (120s), print error, retry
                 print("Couldn't connect to unity simulator, retrying...")
-
+        
+        # load scene
+        self.change_scene(scene)
         print("Unity simulator initialized!")
+        
 
     def echo(self, message: str) -> str:
         '''
-        This function sends a message to the unity simulator
+        This function sends a message to the unity simulator and
+        recieves the echo
 
         Parameters
         ----------
@@ -65,10 +69,24 @@ class UnitySimulator(Simulator):
 
         return recieved_echo
 
-    # to be implemented
     def change_scene(self, scene: str) -> None:
-        return super().change_scene(scene)
+        '''
+        This function sends the path to a scene to the simulator
+        and the command to change to this scene.
 
+        Parameters
+        ----------
+        scene:            The path to the scene to change to.
+
+        Returns
+        ----------
+        None
+        '''
+        # convert scene path into formatted json command and send it
+        send_str: str = json.dumps({'command': 'echo', 'param': [scene]})
+        self.control_socket.send(send_str.encode('utf-8'))
+
+    # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
         return super().get_illumination(light_source)
 
