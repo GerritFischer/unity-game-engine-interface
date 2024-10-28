@@ -26,8 +26,13 @@ public class Main : MonoBehaviour
     static string[] commands={"echo", "change_scene"};
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
-    static void OnStart()
-    {
+    static void OnStart() {
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Function that runs before at startup, saves the main thread context
+        /// and starts up the socket start thread (might refactor later)
+        /// </summary>
+        //---------------------------------------------------------------------
         _mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
@@ -36,7 +41,12 @@ public class Main : MonoBehaviour
     }
 
     static void StartSocketProcess(){
-
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Starts each socket server and waits for client to connect, 
+        /// starts client handle threads for each socket 
+        /// </summary>
+        //---------------------------------------------------------------------
         controlSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), 5000);
         controlSocket.Start();
         Debug.Log("control server started, waiting for connection ...");
@@ -82,9 +92,13 @@ public class Main : MonoBehaviour
     }
 
     static void HandleControlClient(TcpClient client){
-        ///<summary>
-        ///<param name="client">The TcpClient of the control socket</param>
-        ///</summary>
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Handles the control socket, decodes json into command object, 
+        /// invokes the corresponding command
+        /// </summary>
+        /// <param name="client">The TcpClient of the control socket</param>
+        //---------------------------------------------------------------------
 
         controlStream = client.GetStream();
         byte[] buffer = new byte[1024];
@@ -126,9 +140,12 @@ public class Main : MonoBehaviour
     }
 
     static void HandleDataClient(TcpClient client){
-        ///<summary>
-        ///<param name="client">The TcpClient of the data socket</param>
-        ///</summary>
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Handles the data socket
+        /// </summary>
+        /// <param name="client">The TcpClient of the data socket</param>
+        //---------------------------------------------------------------------
         while(true){
             //keep connection open 
         }
@@ -136,11 +153,23 @@ public class Main : MonoBehaviour
     }
 
     static void echo(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Recieves a message as first entry of param array, sends it back
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
         byte[] responseData = Encoding.UTF8.GetBytes(param[0]);
         controlStream.Write(responseData, 0, responseData.Length);
     }
 
     static void change_scene(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Changes the scene to the scene with the name given in param[0]
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
         string scene_name = param[0];        
         try {      
             RunOnMainThread(() =>  {
@@ -155,6 +184,14 @@ public class Main : MonoBehaviour
 
     
     private static void RunOnMainThread(Action action) {
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Checks if the thread that called this function is already the main
+        /// thread, if not, queues the action up to be handled by the main
+        /// thread executor
+        /// </summary>
+        /// <param name="action">The action that will be run on the main thread </param>
+        //---------------------------------------------------------------------
         if (SynchronizationContext.Current == _mainThreadContext) {  
             // If already on main thread, execute immediately
             action();
@@ -168,7 +205,11 @@ public class Main : MonoBehaviour
     }
 
     private static void ProcessMainThreadActions() {   
-
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Dequeues the actions and invokes them on the main thread
+        /// </summary>
+        //---------------------------------------------------------------------
         while (_mainThreadActions.TryDequeue(out Action action)){       
             action.Invoke();
         }
@@ -179,6 +220,11 @@ public class Main : MonoBehaviour
 
 [System.Serializable]
 public class Command{
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Class for decoding and storing json commands
+    /// </summary>
+    //---------------------------------------------------------------------
     public string command;
     public string[] param;
 }
