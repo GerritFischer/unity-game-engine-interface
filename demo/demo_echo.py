@@ -8,8 +8,8 @@ def single_run() -> None:
     In this case it is used for debugging and testing
     '''
     # init simulator
-    simulator = UnitySimulator('path_to_scene_WIP.scene')
-    print(simulator.echo("Test"))
+    simulator = UnitySimulator('debug_scene')
+    #print(simulator.echo("Test"))
 
     while True:
         # keep connection open

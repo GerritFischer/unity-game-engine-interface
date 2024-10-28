@@ -1,24 +1,34 @@
 using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
 
-public class Main 
+//mono behaviour is needed to access main thread of unity
+public class Main : MonoBehaviour
 {
     static private TcpListener controlSocket, videoSocket, dataSocket;
     static private TcpClient controlClient, videoClient, dataClient;
     static private NetworkStream controlStream, videoStream, dataStream;
     static private Thread socketThread;
     static bool connected;
-    static string[] commands={"echo"};
+
+    //actions to be run on the main thread of unity
+    private static readonly ConcurrentQueue<Action> _mainThreadActions = new ConcurrentQueue<Action>();
+    //context to access the main thread from the client threads
+    private static SynchronizationContext _mainThreadContext;
+
+    static string[] commands={"echo", "change_scene"};
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     static void OnStart()
     {
+        _mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
         socketThread.IsBackground = true;
@@ -96,17 +106,21 @@ public class Main
                 method.Invoke(null, new object[]{param});
             }
             else{
-                Debug.Log($"Command:{command} is not defined");
+                Debug.Log($"Command: {command} is not defined");
             }
+
         }
 
     }
     static void HandleVideoClient(TcpClient client){
-        ///<summary>
-        ///<param name="client">The TcpClient of the video socket</param>
-        ///</summary>
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Handles the video socket
+        /// </summary>
+        /// <param name="client">The TcpClient of the video socket</param>
+        //---------------------------------------------------------------------
         while(true){
-            //keep connection open 
+            //keep connection open, WIP 
         }
 
     }
@@ -124,6 +138,41 @@ public class Main
     static void echo(string[] param){
         byte[] responseData = Encoding.UTF8.GetBytes(param[0]);
         controlStream.Write(responseData, 0, responseData.Length);
+    }
+
+    static void change_scene(string[] param){
+        string scene_name = param[0];        
+        try {      
+            RunOnMainThread(() =>  {
+                SceneManager.LoadScene(scene_name);
+            });
+        }
+        catch (Exception e) {     
+            Debug.Log("Couldn't load scene: " + e.Message);
+        }
+
+    }
+
+    
+    private static void RunOnMainThread(Action action) {
+        if (SynchronizationContext.Current == _mainThreadContext) {  
+            // If already on main thread, execute immediately
+            action();
+        }
+        else {
+            // Otherwise, enqueue the action for the main thread
+            _mainThreadActions.Enqueue(action);
+            _mainThreadContext.Post(_ => ProcessMainThreadActions(), null);
+        }
+
+    }
+
+    private static void ProcessMainThreadActions() {   
+
+        while (_mainThreadActions.TryDequeue(out Action action)){       
+            action.Invoke();
+        }
+
     }
 
 }

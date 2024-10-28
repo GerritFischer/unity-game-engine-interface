@@ -9,7 +9,7 @@ from numpy.typing import NDArray
 
 
 class UnitySimulator(Simulator):
-    def __init__(self, scene: str, executable: None | str = None) -> None:
+    def __init__(self, scene_name: str, executable: None | str = None) -> None:
         '''
         The Unity interface class.
         This class connects to the Unity enviroment and controls the flow of
@@ -45,7 +45,7 @@ class UnitySimulator(Simulator):
                 print("Couldn't connect to unity simulator, retrying...")
         
         # load scene
-        self.change_scene(scene)
+        self.change_scene(scene_name)
         print("Unity simulator initialized!")
         
 
@@ -69,7 +69,7 @@ class UnitySimulator(Simulator):
 
         return recieved_echo
 
-    def change_scene(self, scene: str) -> None:
+    def change_scene(self, scene_name: str) -> None:
         '''
         This function sends the path to a scene to the simulator
         and the command to change to this scene.
@@ -83,7 +83,7 @@ class UnitySimulator(Simulator):
         None
         '''
         # convert scene path into formatted json command and send it
-        send_str: str = json.dumps({'command': 'echo', 'param': [scene]})
+        send_str: str = json.dumps({'command': 'change_scene', 'param': [scene_name]})
         self.control_socket.send(send_str.encode('utf-8'))
 
     # to be implemented
