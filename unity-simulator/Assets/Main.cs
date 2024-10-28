@@ -9,8 +9,7 @@ using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
 
-//mono behaviour is needed to access main thread of unity
-public class Main : MonoBehaviour
+public class Main
 {
     static private TcpListener controlSocket, videoSocket, dataSocket;
     static private TcpClient controlClient, videoClient, dataClient;
