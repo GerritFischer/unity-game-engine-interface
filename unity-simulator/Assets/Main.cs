@@ -214,6 +214,23 @@ public class Main
         }
 
     }
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void createAgent(){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Creates an agent if he doesn't exits
+        /// </summary>
+        //---------------------------------------------------------------------
+        if (GameObject.Find("agent" )== null){
+            Debug.Log("agent created");
+            GameObject agent = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            agent.name = "agent";
+            agent.transform.position= new Vector3(0,0,0);
+        }
+        else{
+            Debug.Log("agent already exists");
+        }
+    }
 
 }
 
