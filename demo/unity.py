@@ -1,6 +1,8 @@
 # basic imports
 import socket
 import json
+import os
+import subprocess
 # framework imports
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 # typing imports
@@ -9,7 +11,7 @@ from numpy.typing import NDArray
 
 
 class UnitySimulator(Simulator):
-    def __init__(self, scene_name: str, executable: None | str = None) -> None:
+    def __init__(self, scene_name: str, executable: None | str = None, running: bool = False) -> None:
         '''
         The Unity interface class.
         This class connects to the Unity enviroment and controls the flow of
@@ -17,13 +19,24 @@ class UnitySimulator(Simulator):
 
         Parameters
         ----------
-        scene:              The name of the Unity scene that will be loaded.
+        scene_name:         The name of the Unity scene that will be loaded.
         executable:         The path to the Unity executable.
 
         Returns
         ----------
         None
         '''
+
+        # ensure that the simulator executable was provided
+        if not running:
+            if executable is None:
+                error_msg = 'ERROR: Unity executable path was neither set or given as argument!'
+                assert 'UNITY_EXECUTABLE' in os.environ, error_msg
+                self.executable = os.environ['UNITY_EXECUTABLE']
+            else:
+                self.executable = executable
+            subprocess.Popen([self.executable])
+
         # init sockets
         self.control_socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.video_socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -43,11 +56,10 @@ class UnitySimulator(Simulator):
             except Exception:
                 # if socket connects fails (120s), print error, retry
                 print("Couldn't connect to unity simulator, retrying...")
-        
+
         # load scene
         self.change_scene(scene_name)
         print("Unity simulator initialized!")
-        
 
     def echo(self, message: str) -> str:
         '''

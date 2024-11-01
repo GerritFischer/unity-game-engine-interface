@@ -27,11 +27,11 @@ public class Main
 
     static string[] commands={"echo", "change_scene"};
     
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void OnStart() {
         //---------------------------------------------------------------------
         /// <summary>
-        /// Function that runs before at startup, saves the main thread context
+        /// Function that runs before scene load, saves the main thread context
         /// and starts up the socket start thread (might refactor later)
         /// </summary>
         //---------------------------------------------------------------------
