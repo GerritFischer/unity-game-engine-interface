@@ -9,11 +9,10 @@ def single_run() -> None:
     '''
     # init simulator
     simulator = UnitySimulator('debug_scene')
-    #print(simulator.echo("Test"))
+    print(simulator.echo("Test"))
 
-    while True:
-        # keep connection open
-        pass
+    print("Press ANY key to exit...")
+    input()
 
 
 if __name__ == '__main__':

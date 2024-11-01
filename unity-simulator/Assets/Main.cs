@@ -18,9 +18,12 @@ public class Main
     static bool connected;
 
     //actions to be run on the main thread of unity
-    private static readonly ConcurrentQueue<Action> _mainThreadActions = new ConcurrentQueue<Action>();
+    private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
     //context to access the main thread from the client threads
-    private static SynchronizationContext _mainThreadContext;
+    private static SynchronizationContext mainThreadContext;
+
+    private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
+
 
     static string[] commands={"echo", "change_scene"};
     
@@ -32,7 +35,7 @@ public class Main
         /// and starts up the socket start thread (might refactor later)
         /// </summary>
         //---------------------------------------------------------------------
-        _mainThreadContext = SynchronizationContext.Current;
+        mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
         socketThread.IsBackground = true;
@@ -179,6 +182,8 @@ public class Main
             Debug.Log("Couldn't load scene: " + e.Message);
         }
 
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+
     }
 
     
@@ -191,14 +196,14 @@ public class Main
         /// </summary>
         /// <param name="action">The action that will be run on the main thread </param>
         //---------------------------------------------------------------------
-        if (SynchronizationContext.Current == _mainThreadContext) {  
+        if (SynchronizationContext.Current == mainThreadContext) {  
             // If already on main thread, execute immediately
             action();
         }
         else {
             // Otherwise, enqueue the action for the main thread
-            _mainThreadActions.Enqueue(action);
-            _mainThreadContext.Post(_ => ProcessMainThreadActions(), null);
+            mainThreadActions.Enqueue(action);
+            mainThreadContext.Post(_ => ProcessMainThreadActions(), null);
         }
 
     }
@@ -209,7 +214,7 @@ public class Main
         /// Dequeues the actions and invokes them on the main thread
         /// </summary>
         //---------------------------------------------------------------------
-        while (_mainThreadActions.TryDequeue(out Action action)){       
+        while (mainThreadActions.TryDequeue(out Action action)){       
             action.Invoke();
         }
 

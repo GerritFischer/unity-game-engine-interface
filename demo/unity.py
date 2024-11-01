@@ -65,7 +65,7 @@ class UnitySimulator(Simulator):
         # convert message into formatted json command and send it
         send_str: str = json.dumps({'command': 'echo', 'param': [message]})
         self.control_socket.send(send_str.encode('utf-8'))
-        recieved_echo: str = self.control_socket.recv(50).decode('utf-8')
+        recieved_echo: str = self.control_socket.recv(1024).decode('utf-8')
 
         return recieved_echo
 
@@ -85,6 +85,7 @@ class UnitySimulator(Simulator):
         # convert scene path into formatted json command and send it
         send_str: str = json.dumps({'command': 'change_scene', 'param': [scene_name]})
         self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.recv(50)
 
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
