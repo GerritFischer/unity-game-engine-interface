@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -8,6 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
+using System.IO;
 
 public class Main
 {
@@ -23,7 +25,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
 
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
-
+    private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
     static string[] commands={"echo", "change_scene"};
     
@@ -35,6 +37,7 @@ public class Main
         /// and starts up the socket start thread (might refactor later)
         /// </summary>
         //---------------------------------------------------------------------
+        LoadAssetBundles("C:\\addons");
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
@@ -172,18 +175,37 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string scene_name = param[0];        
-        try {      
-            RunOnMainThread(() =>  {
-                SceneManager.LoadScene(scene_name);
-            });
-        }
-        catch (Exception e) {     
-            Debug.Log("Couldn't load scene: " + e.Message);
-        }
+        string scene_name = param[0];     
 
+        RunOnMainThread(() =>  {
+        // goes through each bundle and tries to load scene
+        foreach (AssetBundle bundle in loadedBundles)
+        {
+            // check if the bundle contains the scene
+            if (bundle.isStreamedSceneAssetBundle)
+            {
+                string[] scenePaths = bundle.GetAllScenePaths();
+                foreach (string scenePath in scenePaths)
+                {
+                    // Extract the scene name from the path
+                    string sceneFileName = Path.GetFileNameWithoutExtension(scenePath);
+                    if (sceneFileName == scene_name)
+                    
+                        
+                            SceneManager.LoadScene(sceneFileName);
+                        
+                        //SceneManager.LoadScene(sceneFileName);
+                        Debug.Log($"Loading scene '{scene_name}' from bundle.");
+                        controlStream.Write(aknBytes, 0, aknBytes.Length);
+                        return;  // Exit after loading the scene
+                    }
+                }
+            }
+            
+        
+        Debug.LogWarning($"Scene '{scene_name}' not found in any loaded Asset Bundles.");
         controlStream.Write(aknBytes, 0, aknBytes.Length);
-
+        });
     }
 
     
@@ -216,6 +238,21 @@ public class Main
         //---------------------------------------------------------------------
         while (mainThreadActions.TryDequeue(out Action action)){       
             action.Invoke();
+        }
+
+    }
+
+    private static void LoadAssetBundles(string folderPath){
+        if(!Directory.Exists(folderPath)){
+            Debug.Log("Directory does not exist: " + folderPath);
+            return;
+        }
+        // get all file paths of directory
+        string[] bundleFiles = Directory.GetFiles(folderPath);
+        foreach(string filePath in bundleFiles)
+        {
+            AssetBundle bundle = AssetBundle.LoadFromFile(filePath);
+            loadedBundles.Add(bundle);
         }
 
     }

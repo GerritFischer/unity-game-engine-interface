@@ -8,7 +8,7 @@ def single_run() -> None:
     In this case it is used for debugging and testing
     '''
     # init simulator
-    simulator = UnitySimulator(scene_name='debug_scene')
+    simulator = UnitySimulator(scene_name='debug_1', running=True)
     print(simulator.echo("Test"))
 
     print("Press ANY key to exit...")
