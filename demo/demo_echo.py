@@ -1,5 +1,6 @@
 # framework imports
 from unity import UnitySimulator
+import time
 
 
 def single_run() -> None:
@@ -10,6 +11,16 @@ def single_run() -> None:
     # init simulator
     simulator = UnitySimulator(scene_name='debug_1', running=True)
     print(simulator.echo("Test"))
+
+    for i in range(3):
+        time.sleep(1)
+        simulator.change_scene("debug_2")
+        time.sleep(1)
+        simulator.change_scene("debug_3")
+        time.sleep(1)
+        simulator.change_scene("debug_1")
+
+        
 
     print("Press ANY key to exit...")
     input()

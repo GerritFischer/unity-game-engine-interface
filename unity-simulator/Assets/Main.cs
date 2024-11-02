@@ -37,7 +37,7 @@ public class Main
         /// and starts up the socket start thread (might refactor later)
         /// </summary>
         //---------------------------------------------------------------------
-        LoadAssetBundles("C:\\addons");
+        LoadAssetBundles(".\\addons");
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
@@ -178,34 +178,16 @@ public class Main
         string scene_name = param[0];     
 
         RunOnMainThread(() =>  {
-        // goes through each bundle and tries to load scene
-        foreach (AssetBundle bundle in loadedBundles)
-        {
-            // check if the bundle contains the scene
-            if (bundle.isStreamedSceneAssetBundle)
-            {
-                string[] scenePaths = bundle.GetAllScenePaths();
-                foreach (string scenePath in scenePaths)
-                {
-                    // Extract the scene name from the path
-                    string sceneFileName = Path.GetFileNameWithoutExtension(scenePath);
-                    if (sceneFileName == scene_name)
-                    
-                        
-                            SceneManager.LoadScene(sceneFileName);
-                        
-                        //SceneManager.LoadScene(sceneFileName);
-                        Debug.Log($"Loading scene '{scene_name}' from bundle.");
-                        controlStream.Write(aknBytes, 0, aknBytes.Length);
-                        return;  // Exit after loading the scene
-                    }
-                }
+            try{
+                SceneManager.LoadScene(scene_name);
             }
-            
-        
-        Debug.LogWarning($"Scene '{scene_name}' not found in any loaded Asset Bundles.");
-        controlStream.Write(aknBytes, 0, aknBytes.Length);
+            catch(Exception e){
+                Debug.LogWarning(e.Message);    
+            }   
         });
+
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+        
     }
 
     
