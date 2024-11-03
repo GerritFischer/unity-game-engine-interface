@@ -184,10 +184,9 @@ public class Main
             catch(Exception e){
                 Debug.LogWarning(e.Message);    
             }   
+            controlStream.Write(aknBytes, 0, aknBytes.Length);
         });
-
-        controlStream.Write(aknBytes, 0, aknBytes.Length);
-        
+           
     }
 
     
@@ -225,6 +224,13 @@ public class Main
     }
 
     private static void LoadAssetBundles(string folderPath){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Loads the AssetBundles from the given path into a list to load
+        /// scene from them.
+        /// </summary>
+        /// <param name="folderPath">The path to the folder where the bundles are located </param>
+        //---------------------------------------------------------------------
         if(!Directory.Exists(folderPath)){
             Debug.Log("Directory does not exist: " + folderPath);
             return;
