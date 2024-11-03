@@ -172,14 +172,29 @@ public class Main
         string scene_name = param[0];        
         try {      
             RunOnMainThread(() =>  {
+                // invoke OnSceneLoaded when new scene is loaded
+                SceneManager.sceneLoaded += OnSceneLoaded;
                 SceneManager.LoadScene(scene_name);
             });
         }
         catch (Exception e) {     
             Debug.Log("Couldn't load scene: " + e.Message);
         }
-        createAgent();
+        
 
+    }
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+         //---------------------------------------------------------------------
+        /// <summary>
+        /// creates Scene after it is fully loaded
+        /// </summary>
+        /// <param name="scene">It takes the information of the scene </param>
+        /// <param name="mode">Mode shows the way the scene got loaded in </param>
+        //---------------------------------------------------------------------
+
+        createAgent();
+        //remove the Eventhandler
+        //SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     
@@ -225,10 +240,11 @@ public class Main
 
         // check if name of agent exist
         if (GameObject.Find("agent" )== null){
-            Debug.Log("agent created");
             GameObject agent = GameObject.CreatePrimitive(PrimitiveType.Cube);
             agent.name = "agent";
             agent.transform.position= new Vector3(0,0,0);
+            Debug.Log("agent created");
+            
         }
         else{
             Debug.Log("agent already exists");
