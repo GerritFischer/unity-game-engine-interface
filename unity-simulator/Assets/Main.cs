@@ -178,6 +178,7 @@ public class Main
         catch (Exception e) {     
             Debug.Log("Couldn't load scene: " + e.Message);
         }
+        createAgent();
 
     }
 
@@ -214,13 +215,15 @@ public class Main
         }
 
     }
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void createAgent(){
         //---------------------------------------------------------------------
         /// <summary>
         /// Creates an agent if he doesn't exits
         /// </summary>
         //---------------------------------------------------------------------
+
+
+        // check if name of agent exist
         if (GameObject.Find("agent" )== null){
             Debug.Log("agent created");
             GameObject agent = GameObject.CreatePrimitive(PrimitiveType.Cube);
