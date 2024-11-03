@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -8,6 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
+using System.IO;
 
 public class Main
 {
@@ -18,21 +20,25 @@ public class Main
     static bool connected;
 
     //actions to be run on the main thread of unity
-    private static readonly ConcurrentQueue<Action> _mainThreadActions = new ConcurrentQueue<Action>();
+    private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
     //context to access the main thread from the client threads
-    private static SynchronizationContext _mainThreadContext;
+    private static SynchronizationContext mainThreadContext;
+
+    private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
+    private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
     static string[] commands={"echo", "change_scene"};
     
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void OnStart() {
         //---------------------------------------------------------------------
         /// <summary>
-        /// Function that runs before at startup, saves the main thread context
+        /// Function that runs before scene load, saves the main thread context
         /// and starts up the socket start thread (might refactor later)
         /// </summary>
         //---------------------------------------------------------------------
-        _mainThreadContext = SynchronizationContext.Current;
+        LoadAssetBundles(".\\addons");
+        mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
         socketThread.IsBackground = true;
@@ -182,6 +188,16 @@ public class Main
         }
         
 
+        RunOnMainThread(() =>  {
+            try{
+                SceneManager.LoadScene(scene_name);
+            }
+            catch(Exception e){
+                Debug.LogWarning(e.Message);    
+            }   
+            controlStream.Write(aknBytes, 0, aknBytes.Length);
+        });
+           
     }
     private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
          //---------------------------------------------------------------------
@@ -207,14 +223,14 @@ public class Main
         /// </summary>
         /// <param name="action">The action that will be run on the main thread </param>
         //---------------------------------------------------------------------
-        if (SynchronizationContext.Current == _mainThreadContext) {  
+        if (SynchronizationContext.Current == mainThreadContext) {  
             // If already on main thread, execute immediately
             action();
         }
         else {
             // Otherwise, enqueue the action for the main thread
-            _mainThreadActions.Enqueue(action);
-            _mainThreadContext.Post(_ => ProcessMainThreadActions(), null);
+            mainThreadActions.Enqueue(action);
+            mainThreadContext.Post(_ => ProcessMainThreadActions(), null);
         }
 
     }
@@ -225,7 +241,7 @@ public class Main
         /// Dequeues the actions and invokes them on the main thread
         /// </summary>
         //---------------------------------------------------------------------
-        while (_mainThreadActions.TryDequeue(out Action action)){       
+        while (mainThreadActions.TryDequeue(out Action action)){       
             action.Invoke();
         }
 
@@ -249,6 +265,28 @@ public class Main
         else{
             Debug.Log("agent already exists");
         }
+    }
+
+    private static void LoadAssetBundles(string folderPath){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Loads the AssetBundles from the given path into a list to load
+        /// scene from them.
+        /// </summary>
+        /// <param name="folderPath">The path to the folder where the bundles are located </param>
+        //---------------------------------------------------------------------
+        if(!Directory.Exists(folderPath)){
+            Debug.Log("Directory does not exist: " + folderPath);
+            return;
+        }
+        // get all file paths of directory
+        string[] bundleFiles = Directory.GetFiles(folderPath);
+        foreach(string filePath in bundleFiles)
+        {
+            AssetBundle bundle = AssetBundle.LoadFromFile(filePath);
+            loadedBundles.Add(bundle);
+        }
+
     }
 
 }
