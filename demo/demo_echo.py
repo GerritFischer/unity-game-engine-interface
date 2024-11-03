@@ -1,5 +1,6 @@
 # framework imports
 from unity import UnitySimulator
+import time
 
 
 def single_run() -> None:
@@ -8,12 +9,21 @@ def single_run() -> None:
     In this case it is used for debugging and testing
     '''
     # init simulator
-    simulator = UnitySimulator('debug_scene')
-    #print(simulator.echo("Test"))
+    simulator = UnitySimulator(scene_name='debug_1')
+    print(simulator.echo("Test"))
 
-    while True:
-        # keep connection open
-        pass
+    for i in range(3):
+        time.sleep(1)
+        simulator.change_scene("debug_2")
+        time.sleep(1)
+        simulator.change_scene("debug_3")
+        time.sleep(1)
+        simulator.change_scene("debug_1")
+
+        
+
+    print("Press ANY key to exit...")
+    input()
 
 
 if __name__ == '__main__':
