@@ -37,7 +37,8 @@ public class Main
         /// and starts up the socket start thread (might refactor later)
         /// </summary>
         //---------------------------------------------------------------------
-        LoadAssetBundles(".\\addons");
+        string path = Path.Combine(".", "addons");
+        LoadAssetBundles(path);
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
