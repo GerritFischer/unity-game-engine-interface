@@ -20,8 +20,6 @@ def single_run() -> None:
         time.sleep(1)
         simulator.change_scene("debug_1")
 
-        
-
     print("Press ANY key to exit...")
     input()
 

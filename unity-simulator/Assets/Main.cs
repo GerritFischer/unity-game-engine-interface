@@ -38,6 +38,8 @@ public class Main
         /// </summary>
         //---------------------------------------------------------------------
         LoadAssetBundles(".\\addons");
+        //add Eventhandler for creating agent after scene load complete
+        SceneManager.sceneLoaded+=createAgent;
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
@@ -175,19 +177,7 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string scene_name = param[0];        
-        try {      
-            RunOnMainThread(() =>  {
-                // invoke OnSceneLoaded when new scene is loaded
-                SceneManager.sceneLoaded += OnSceneLoaded;
-                SceneManager.LoadScene(scene_name);
-            });
-        }
-        catch (Exception e) {     
-            Debug.Log("Couldn't load scene: " + e.Message);
-        }
-        
-
+        string scene_name = param[0];
         RunOnMainThread(() =>  {
             try{
                 SceneManager.LoadScene(scene_name);
@@ -199,20 +189,7 @@ public class Main
         });
            
     }
-    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
-         //---------------------------------------------------------------------
-        /// <summary>
-        /// creates Scene after it is fully loaded
-        /// </summary>
-        /// <param name="scene">It takes the information of the scene </param>
-        /// <param name="mode">Mode shows the way the scene got loaded in </param>
-        //---------------------------------------------------------------------
-
-        createAgent();
-        //remove the Eventhandler
-        //SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
+    
     
     private static void RunOnMainThread(Action action) {
         //---------------------------------------------------------------------
@@ -246,7 +223,7 @@ public class Main
         }
 
     }
-    private static void createAgent(){
+    private static void createAgent(Scene scene, LoadSceneMode mode){
         //---------------------------------------------------------------------
         /// <summary>
         /// Creates an agent if he doesn't exits
