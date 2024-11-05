@@ -39,6 +39,7 @@ public class Main
         //---------------------------------------------------------------------
         string path = Path.Combine(".", "addons");
         LoadAssetBundles(path);
+        SceneManager.sceneLoaded+=createAgent;
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
@@ -176,8 +177,7 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string scene_name = param[0];     
-
+        string scene_name = param[0];
         RunOnMainThread(() =>  {
             try{
                 SceneManager.LoadScene(scene_name);
@@ -189,7 +189,7 @@ public class Main
         });
            
     }
-
+    
     
     private static void RunOnMainThread(Action action) {
         //---------------------------------------------------------------------
@@ -222,6 +222,26 @@ public class Main
             action.Invoke();
         }
 
+    }
+    private static void createAgent(Scene scene, LoadSceneMode mode){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Creates an agent if he doesn't exits
+        /// </summary>
+        //---------------------------------------------------------------------
+
+
+        // check if name of agent exist
+        if (GameObject.Find("agent" )== null){
+            GameObject agent = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            agent.name = "agent";
+            agent.transform.position= new Vector3(0,0,0);
+            Debug.Log("agent created");
+            
+        }
+        else{
+            Debug.Log("agent already exists");
+        }
     }
 
     private static void LoadAssetBundles(string folderPath){
