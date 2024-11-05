@@ -37,8 +37,8 @@ public class Main
         /// and starts up the socket start thread (might refactor later)
         /// </summary>
         //---------------------------------------------------------------------
-        LoadAssetBundles(".\\addons");
-        //add Eventhandler for creating agent after scene load complete
+        string path = Path.Combine(".", "addons");
+        LoadAssetBundles(path);
         SceneManager.sceneLoaded+=createAgent;
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
