@@ -237,7 +237,6 @@ public class Main
         if (agent_object == null){
             agent_object = GameObject.CreatePrimitive(PrimitiveType.Cube);
             agent_object.name = "agent";
-            agent_object.transform.position= new Vector3(0,1,0);
             Debug.Log("agent created");            
         }
 
