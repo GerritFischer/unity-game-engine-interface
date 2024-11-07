@@ -28,6 +28,8 @@ public class Main
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
     static string[] commands={"echo", "change_scene"};
+
+    static Agent agent;
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void OnStart() {
@@ -230,18 +232,19 @@ public class Main
         /// </summary>
         //---------------------------------------------------------------------
 
-
+        GameObject agent_object = GameObject.Find("agent");
         // check if name of agent exist
-        if (GameObject.Find("agent" )== null){
-            GameObject agent = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            agent.name = "agent";
-            agent.transform.position= new Vector3(0,0,0);
-            Debug.Log("agent created");
-            
+        if (agent_object == null){
+            agent_object = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            agent_object.name = "agent";
+            Debug.Log("agent created");            
         }
-        else{
-            Debug.Log("agent already exists");
+
+        if(agent_object.GetComponent<Agent>() == null){
+            agent_object.AddComponent<Agent>();
         }
+
+        agent = agent_object.GetComponent<Agent>();
     }
 
     private static void LoadAssetBundles(string folderPath){
