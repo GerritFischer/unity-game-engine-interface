@@ -29,7 +29,7 @@ public class Agent : MonoBehaviour
         //set default settings for camera
         for (int i = 0; i<4; i++){
             //becomes child of agent
-            camObjects[i].transform.parent = camObjects[i].transform.parent = this.transform;
+            camObjects[i].transform.parent = this.transform;
             camObjects[i].transform.position = new Vector3(0,1.5f,0);
             cams[i] = camObjects[i].AddComponent<Camera>();
             cams[i].enabled = false;
