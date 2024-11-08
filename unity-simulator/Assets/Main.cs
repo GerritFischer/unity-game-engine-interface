@@ -27,7 +27,7 @@ public class Main
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
-    static string[] commands={"echo", "change_scene"};
+    static string[] commands={"echo", "change_scene", "step_simulation_without_physics"};
 
     static Agent agent;
     
@@ -190,6 +190,13 @@ public class Main
             controlStream.Write(aknBytes, 0, aknBytes.Length);
         });
            
+    }
+
+    static void step_simulation_without_physics(param){
+        float x = param[0];
+        float y = param[1];
+        float yaw = param[2];
+        agent.move(x, y, yaw)        
     }
     
     

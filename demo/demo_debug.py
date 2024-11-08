@@ -12,6 +12,7 @@ def single_run() -> None:
     simulator = UnitySimulator(scene_name='debug_1', running=True)
     print(simulator.echo("Test"))
 
+    
     for i in range(3):
         time.sleep(1)
         simulator.change_scene("debug_2")
