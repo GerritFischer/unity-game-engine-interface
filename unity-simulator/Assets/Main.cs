@@ -27,7 +27,7 @@ public class Main
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
-    static string[] commands={"echo", "change_scene", "step_simulation_without_physics"};
+    static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image"};
 
     static Agent agent;
     
@@ -127,6 +127,7 @@ public class Main
                 Type type = typeof(Main);
                 MethodInfo method = type.GetMethod(command, BindingFlags.Static | BindingFlags.NonPublic);
                 method.Invoke(null, new object[]{param});
+                Debug.Log($"Command: {command} is done");
             }
             else{
                 Debug.Log($"Command: {command} is not defined");
@@ -136,14 +137,21 @@ public class Main
 
     }
     static void HandleVideoClient(TcpClient client){
+
         //---------------------------------------------------------------------
         /// <summary>
         /// Handles the video socket
         /// </summary>
         /// <param name="client">The TcpClient of the video socket</param>
         //---------------------------------------------------------------------
-        while(true){
-            //keep connection open, WIP 
+        videoStream = client.GetStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+         
+        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
+            string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            Debug.Log("Received on vid: " + message);
+
         }
 
     }
@@ -193,6 +201,7 @@ public class Main
     }
 
     static void step_simulation_without_physics(string[] param){
+        Debug.Log("stepping it up");
         //---------------------------------------------------------------------
         /// <summary>
         /// Invokes the move method of the agent and steps simulation
@@ -203,7 +212,37 @@ public class Main
         float y = float.Parse(param[1]);
         float yaw = float.Parse(param[2]);
         agent.move(x, y, yaw);
-        controlStream.Write(aknBytes, 0, aknBytes.Length);        
+        Debug.Log("stepped it up");
+        controlStream.Write(aknBytes, 0, aknBytes.Length);    
+        Debug.Log("told everyone");    
+    }
+
+    static void get_image(string[] param){
+        Debug.Log("trying to get image");
+        int[,] image = agent.get_image();
+
+        // convert image array into byte array for transfer
+        int rows = image.GetLength(0);
+        Debug.Log("ROWS" + rows);
+        int cols = image.GetLength(1);
+        int elements = rows * cols;
+
+        // elements * 4 because each int takes up 4 bytes
+        byte[] byteArray = new byte[elements * 4];
+
+        for (int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++){
+                byteArray[i*cols+j] = (byte)image[i,j];
+            }
+        }
+
+        Debug.Log("trying to send video");
+        videoStream.Write(byteArray, 0, byteArray.Length);
+        // todo: wait for akn from interface on video stream
+        Debug.Log("video sent");
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+        Debug.Log("done here");
+
     }
     
     

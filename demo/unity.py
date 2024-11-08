@@ -3,6 +3,7 @@ import socket
 import json
 import os
 import subprocess
+import numpy as np
 # framework imports
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 # typing imports
@@ -119,6 +120,19 @@ class UnitySimulator(Simulator):
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
         
+        #retrieve image
+        send_str = json.dumps({'command': 'get_image', 'param': []})
+        self.control_socket.send(send_str.encode('utf-8'))
+        print("Move done")
+        image_bytes= self.video_socket.recv(8*2*3)
+        print(image_bytes)
+        image_data : NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
+        image_data = np.reshape(image_data, (2, 8, 3))
+        print(image_data)
+        self.video_socket.send('AKN'.encode('utf-8'))
+        self.control_socket.recv(50)
+        print("image recv")
+        return image_data
         pass
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
