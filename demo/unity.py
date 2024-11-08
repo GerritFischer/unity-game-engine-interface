@@ -99,6 +99,27 @@ class UnitySimulator(Simulator):
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 
+    def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
+        '''
+        This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
+        
+        Parameters
+        ----------
+        x :                                 The global x position to teleport to.
+        y :                                 The global y position to teleport to.
+        yaw :                               The global yaw value to teleport to.
+        
+        Returns
+        ----------
+        pose_data :                         The pose observation received from the simulation.
+        image_data :                        The image observation received from the simulation.
+        '''
+        # send the actuation command to the virtual robot/agent
+        send_str = json.dumps({'command': 'step_simulation_without_physics', 'param': [x, y, yaw]})
+        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.recv(50)
+        
+        pass
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
         return super().get_illumination(light_source)
@@ -108,9 +129,6 @@ class UnitySimulator(Simulator):
 
     def get_objects(self) -> dict[str, Any]:
         return super().get_objects()
-
-    def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
-        return super().move_agent(x, y, yaw)
 
     def move_object(self, object_id: str, pose) -> None:
         return super().move_object(object_id, pose)

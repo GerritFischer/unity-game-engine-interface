@@ -16,7 +16,7 @@ public class Agent : MonoBehaviour
         
     }
 
-    void move(){
+    public void move(float x, float y, float yaw){
         //TODO: Tommy
     }
 

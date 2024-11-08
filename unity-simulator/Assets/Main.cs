@@ -192,11 +192,18 @@ public class Main
            
     }
 
-    static void step_simulation_without_physics(param){
-        float x = param[0];
-        float y = param[1];
-        float yaw = param[2];
-        agent.move(x, y, yaw)        
+    static void step_simulation_without_physics(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Invokes the move method of the agent and steps simulation
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
+        float x = float.Parse(param[0]);
+        float y = float.Parse(param[1]);
+        float yaw = float.Parse(param[2]);
+        agent.move(x, y, yaw);
+        controlStream.Write(aknBytes, 0, aknBytes.Length);        
     }
     
     
