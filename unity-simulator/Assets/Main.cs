@@ -10,6 +10,8 @@ using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 public class Main
 {
@@ -27,7 +29,7 @@ public class Main
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
-    static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image"};
+    static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
 
     static Agent agent;
     
@@ -215,6 +217,13 @@ public class Main
         Debug.Log("stepped it up");
         controlStream.Write(aknBytes, 0, aknBytes.Length);    
         Debug.Log("told everyone");    
+    }
+
+    static void get_image_info(){
+        string image_info = JsonUtility.ToJson(new {width = 1920*4, height=1080, channels=3, format="rgb"});
+        byte[] image_info_bytes = Encoding.Default.GetBytes(image_info);
+        dataStream.Write(image_info_bytes, 0, image_info_bytes.Length);
+        
     }
 
     static void get_image(string[] param){

@@ -100,6 +100,8 @@ class UnitySimulator(Simulator):
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 
+    def get_image_info(self) -> ImageInfo:
+        
     def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
         '''
         This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
@@ -137,9 +139,6 @@ class UnitySimulator(Simulator):
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
         return super().get_illumination(light_source)
-
-    def get_image_info(self) -> ImageInfo:
-        return super().get_image_info()
 
     def get_objects(self) -> dict[str, Any]:
         return super().get_objects()
