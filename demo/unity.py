@@ -60,6 +60,10 @@ class UnitySimulator(Simulator):
 
         # load scene
         self.change_scene(scene_name)
+
+        # get image info of agent
+        self.image_info = self.get_image_info()
+
         print("Unity simulator initialized!")
 
 
@@ -174,10 +178,10 @@ class UnitySimulator(Simulator):
         send_str = json.dumps({'command': 'get_image', 'param': []})
         self.control_socket.send(send_str.encode('utf-8'))
         print("Move done")
-        image_bytes= self.video_socket.recv(8*2*3)
+        image_bytes= self.video_socket.recv(self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
         print(image_bytes)
         image_data : NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
-        image_data = np.reshape(image_data, (2, 8, 3))
+        image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
         print(image_data)
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)

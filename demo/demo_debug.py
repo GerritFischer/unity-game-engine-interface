@@ -14,7 +14,6 @@ def single_run() -> None:
     simulator = UnitySimulator(scene_name='debug_1', running=True)
     print(simulator.echo("Test"))
     data = simulator.move_agent(5.0, 3.0, 2.0)
-    print(simulator.get_image_info())
     plt.imshow(data, interpolation='nearest')
     plt.show()
 

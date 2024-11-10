@@ -233,7 +233,7 @@ public class Main
     }
 
     static void get_image_info(string[] param){
-        string image_info = JsonUtility.ToJson(new ImageInfo {width = 2*4, height=2, channels=3, format="rgb"});
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = 4*4, height=4, channels=3, format="rgb"});
         Debug.Log(image_info);
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
