@@ -176,8 +176,9 @@ class UnitySimulator(Simulator):
         send_str = json.dumps({'command': 'get_image', 'param': []})
         self.control_socket.send(send_str.encode('utf-8'))
         # todo: get receive in chunks to work
-        # image_bytes = self.receive_in_chunks(self.video_socket, self.image_info['height'] * self.image_info['width'] * self.image_info['channels'] + 16*4) 
+        # image_bytes = self.receive_in_chunks(self.video_socket, self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
         image_bytes= self.video_socket.recv(self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
+        print(image_bytes)
         image_data : NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
         image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
 
