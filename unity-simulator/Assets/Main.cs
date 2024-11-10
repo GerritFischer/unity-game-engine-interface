@@ -165,11 +165,24 @@ public class Main
         /// </summary>
         /// <param name="client">The TcpClient of the data socket</param>
         //---------------------------------------------------------------------
-        while(true){
-            //keep connection open 
-        }
+        dataStream = client.GetStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+         
+        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
+            string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            Debug.Log("Received on data: " + message);
 
+        }
     }
+
+    static void send_data(NetworkStream stream, byte[] data){
+        Debug.Log(data != null);
+        data = data.Concat(Encoding.Default.GetBytes("!unityservereod!")).ToArray();
+        Debug.Log(data != null);
+        stream.Write(data, 0, data.Length);
+    }
+
 
     static void echo(string[] param){
         //---------------------------------------------------------------------
@@ -219,10 +232,13 @@ public class Main
         Debug.Log("told everyone");    
     }
 
-    static void get_image_info(){
-        string image_info = JsonUtility.ToJson(new {width = 1920*4, height=1080, channels=3, format="rgb"});
-        byte[] image_info_bytes = Encoding.Default.GetBytes(image_info);
-        dataStream.Write(image_info_bytes, 0, image_info_bytes.Length);
+    static void get_image_info(string[] param){
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = 2*4, height=2, channels=3, format="rgb"});
+        Debug.Log(image_info);
+        byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
+        send_data(dataStream, image_info_bytes);
+        //dataStream.Write(image_info_bytes, 0, image_info_bytes.Length);
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
         
     }
 
@@ -342,4 +358,13 @@ public class Command{
     //---------------------------------------------------------------------
     public string command;
     public string[] param;
+}
+
+[System.Serializable]
+public class ImageInfo
+{
+    public int width;
+    public int height;
+    public int channels;
+    public string format;
 }

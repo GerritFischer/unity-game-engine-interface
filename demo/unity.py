@@ -62,6 +62,31 @@ class UnitySimulator(Simulator):
         self.change_scene(scene_name)
         print("Unity simulator initialized!")
 
+
+    def receive_in_chunks(self, socket: socket.socket, chunk_size: int) -> bytes:
+        '''
+        This function reads data in chunks from a socket.
+        
+        Parameters
+        ----------
+        socket :                            The socket to read the data from.\n
+        chunk_size :                        The size of the chunk to read.\n
+        
+        Returns
+        ----------
+        data :                              The data as a byte string.\n
+        '''
+        # define buffer
+        data = b''
+        # read the data in chunks
+        while True:
+            data_chunk = socket.recv(chunk_size)
+            data += data_chunk
+            if data[-16:] ==  b'!unityservereod!':
+                break
+        
+        return data[:-16]
+
     def echo(self, message: str) -> str:
         '''
         This function sends a message to the unity simulator and
@@ -101,9 +126,32 @@ class UnitySimulator(Simulator):
         self.control_socket.recv(50)
 
     def get_image_info(self) -> ImageInfo:
+        '''
+        This function retrieves image information from the simulation.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        ----------
+        image_info :                        A dictionary containing information about the images rendered by Unity (i.e. dimensions, channels, format).\n
+        '''
+        # send the request for image information change to unity
+        self.control_socket.send(json.dumps({'command': 'get_image_info', 'param': []}).encode('utf-8'))
+        # retrieve image information
+        image_info = json.loads(self.receive_in_chunks(self.data_socket, 1024).decode('utf-8'))
+        #image_info = json.loads(self.data_socket.recv(1000).decode('utf-8'))
+        self.data_socket.send('AKN'.encode('utf-8'))
+        self.control_socket.recv(50)
+        
+        return image_info
+
         
     def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
         '''
+
+
         This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
         
         Parameters
