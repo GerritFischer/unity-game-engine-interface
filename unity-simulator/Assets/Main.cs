@@ -177,6 +177,13 @@ public class Main
     }
 
     static void send_data(NetworkStream stream, byte[] data){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// sends data via the given socket and adds end of data bytes at the end
+        /// </summary>
+        /// <param name="stream">The stream which the data will be written to</param>
+        /// <param name="data">The data that will be send</param>
+        //---------------------------------------------------------------------
         Debug.Log(data != null);
         data = data.Concat(Encoding.Default.GetBytes("!unityservereod!")).ToArray();
         Debug.Log(data != null);
@@ -233,40 +240,45 @@ public class Main
     }
 
     static void get_image_info(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Retrieves the format data of the image
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
         string image_info = JsonUtility.ToJson(new ImageInfo {width = 4*4, height=4, channels=3, format="rgb"});
         Debug.Log(image_info);
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
-        //dataStream.Write(image_info_bytes, 0, image_info_bytes.Length);
         controlStream.Write(aknBytes, 0, aknBytes.Length);
         
     }
 
     static void get_image(string[] param){
-        Debug.Log("trying to get image");
-        int[,] image = agent.get_image();
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Retrieves the image the agent is currently seeing
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
 
+        int[,] image = agent.get_image();
         // convert image array into byte array for transfer
         int rows = image.GetLength(0);
-        Debug.Log("ROWS" + rows);
         int cols = image.GetLength(1);
         int elements = rows * cols;
-
         // elements * 4 because each int takes up 4 bytes
         byte[] byteArray = new byte[elements * 4];
-
         for (int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
                 byteArray[i*cols+j] = (byte)image[i,j];
             }
         }
 
-        Debug.Log("trying to send video");
-        videoStream.Write(byteArray, 0, byteArray.Length);
+        send_data(videoStream, byteArray);
+        //videoStream.Write(byteArray, 0, byteArray.Length);
         // todo: wait for akn from interface on video stream
-        Debug.Log("video sent");
         controlStream.Write(aknBytes, 0, aknBytes.Length);
-        Debug.Log("done here");
 
     }
     
@@ -363,6 +375,11 @@ public class Command{
 [System.Serializable]
 public class ImageInfo
 {
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Class for storing image info
+    /// </summary>
+    //---------------------------------------------------------------------
     public int width;
     public int height;
     public int channels;

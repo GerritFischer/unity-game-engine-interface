@@ -154,8 +154,6 @@ class UnitySimulator(Simulator):
         
     def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
         '''
-
-
         This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
         
         Parameters
@@ -169,7 +167,7 @@ class UnitySimulator(Simulator):
         pose_data :                         The pose observation received from the simulation.
         image_data :                        The image observation received from the simulation.
         '''
-        # send the actuation command to the virtual robot/agent
+        # send the actuation command to the virtual agent
         send_str = json.dumps({'command': 'step_simulation_without_physics', 'param': [x, y, yaw]})
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
@@ -177,17 +175,16 @@ class UnitySimulator(Simulator):
         #retrieve image
         send_str = json.dumps({'command': 'get_image', 'param': []})
         self.control_socket.send(send_str.encode('utf-8'))
-        print("Move done")
+        # todo: get receive in chunks to work
+        # image_bytes = self.receive_in_chunks(self.video_socket, self.image_info['height'] * self.image_info['width'] * self.image_info['channels'] + 16*4) 
         image_bytes= self.video_socket.recv(self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
-        print(image_bytes)
         image_data : NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
         image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
-        print(image_data)
+
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
-        print("image recv")
         return image_data
-        pass
+
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
         return super().get_illumination(light_source)
