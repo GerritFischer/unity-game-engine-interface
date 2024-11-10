@@ -10,6 +10,8 @@ using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 public class Main
 {
@@ -27,7 +29,7 @@ public class Main
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
-    static string[] commands={"echo", "change_scene"};
+    static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
 
     static Agent agent;
     
@@ -127,6 +129,7 @@ public class Main
                 Type type = typeof(Main);
                 MethodInfo method = type.GetMethod(command, BindingFlags.Static | BindingFlags.NonPublic);
                 method.Invoke(null, new object[]{param});
+                Debug.Log($"Command: {command} is done");
             }
             else{
                 Debug.Log($"Command: {command} is not defined");
@@ -136,14 +139,21 @@ public class Main
 
     }
     static void HandleVideoClient(TcpClient client){
+
         //---------------------------------------------------------------------
         /// <summary>
         /// Handles the video socket
         /// </summary>
         /// <param name="client">The TcpClient of the video socket</param>
         //---------------------------------------------------------------------
-        while(true){
-            //keep connection open, WIP 
+        videoStream = client.GetStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+         
+        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
+            string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            Debug.Log("Received on vid: " + message);
+
         }
 
     }
@@ -155,11 +165,31 @@ public class Main
         /// </summary>
         /// <param name="client">The TcpClient of the data socket</param>
         //---------------------------------------------------------------------
-        while(true){
-            //keep connection open 
-        }
+        dataStream = client.GetStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+         
+        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
+            string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            Debug.Log("Received on data: " + message);
 
+        }
     }
+
+    static void send_data(NetworkStream stream, byte[] data){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// sends data via the given socket and adds end of data bytes at the end
+        /// </summary>
+        /// <param name="stream">The stream which the data will be written to</param>
+        /// <param name="data">The data that will be send</param>
+        //---------------------------------------------------------------------
+        Debug.Log(data != null);
+        data = data.Concat(Encoding.Default.GetBytes("!unityservereod!")).ToArray();
+        Debug.Log(data != null);
+        stream.Write(data, 0, data.Length);
+    }
+
 
     static void echo(string[] param){
         //---------------------------------------------------------------------
@@ -190,6 +220,66 @@ public class Main
             controlStream.Write(aknBytes, 0, aknBytes.Length);
         });
            
+    }
+
+    static void step_simulation_without_physics(string[] param){
+        Debug.Log("stepping it up");
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Invokes the move method of the agent and steps simulation
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
+        float x = float.Parse(param[0]);
+        float y = float.Parse(param[1]);
+        float yaw = float.Parse(param[2]);
+        agent.move(x, y, yaw);
+        Debug.Log("stepped it up");
+        controlStream.Write(aknBytes, 0, aknBytes.Length);    
+        Debug.Log("told everyone");    
+    }
+
+    static void get_image_info(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Retrieves the format data of the image
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = 4*4, height=4, channels=3, format="rgb"});
+        Debug.Log(image_info);
+        byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
+        send_data(dataStream, image_info_bytes);
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+        
+    }
+
+    static void get_image(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Retrieves the image the agent is currently seeing
+        /// </summary>
+        /// <param name="param">The array of parameters</param>
+        //---------------------------------------------------------------------
+
+        int[,] image = agent.get_image();
+        // convert image array into byte array for transfer
+        int rows = image.GetLength(0);
+        int cols = image.GetLength(1);
+        int elements = rows * cols;
+        // elements * 4 because each int takes up 4 bytes
+        byte[] byteArray = new byte[elements * 4];
+        for (int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++){
+                byteArray[i*cols+j] = (byte)image[i,j];
+            }
+        }
+
+        send_data(videoStream, byteArray);
+        //videoStream.Write(byteArray, 0, byteArray.Length);
+        // todo: wait for akn from interface on video stream
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+
     }
     
     
@@ -280,4 +370,18 @@ public class Command{
     //---------------------------------------------------------------------
     public string command;
     public string[] param;
+}
+
+[System.Serializable]
+public class ImageInfo
+{
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Class for storing image info
+    /// </summary>
+    //---------------------------------------------------------------------
+    public int width;
+    public int height;
+    public int channels;
+    public string format;
 }

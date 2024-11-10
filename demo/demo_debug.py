@@ -1,6 +1,8 @@
 # framework imports
 from unity import UnitySimulator
 import time
+from matplotlib import pyplot as plt
+import numpy as np
 
 
 def single_run() -> None:
@@ -11,6 +13,9 @@ def single_run() -> None:
     # init simulator
     simulator = UnitySimulator(scene_name='debug_1', running=True)
     print(simulator.echo("Test"))
+    data = simulator.move_agent(5.0, 3.0, 2.0)
+    plt.imshow(data, interpolation='nearest')
+    plt.show()
 
     for i in range(3):
         time.sleep(1)
