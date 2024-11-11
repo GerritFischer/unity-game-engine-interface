@@ -3,6 +3,7 @@ from unity import UnitySimulator
 import time
 from matplotlib import pyplot as plt
 import numpy as np
+import PyQt6 as pygt
 
 
 def single_run() -> None:
@@ -13,10 +14,12 @@ def single_run() -> None:
     # init simulator
     simulator = UnitySimulator(scene_name='debug_1', running=True)
     print(simulator.echo("Test"))
-    data = simulator.move_agent(5.0, 3.0, 2.0)
-    plt.imshow(data, interpolation='nearest')
+    data = simulator.move_agent(0, 0, 0)
+    im = plt.imshow(data, interpolation='nearest')
     plt.show()
-
+    data2 = simulator.move_agent(0, 0, 0)
+    im = plt.imshow(data2, interpolation='nearest')
+    plt.show()
     for i in range(3):
         time.sleep(1)
         simulator.change_scene("debug_2")

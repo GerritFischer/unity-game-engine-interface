@@ -59,7 +59,7 @@ class UnitySimulator(Simulator):
                 print("Couldn't connect to unity simulator, retrying...")
 
         # load scene
-        self.change_scene(scene_name)
+        #self.change_scene(scene_name)
 
         # get image info of agent
         self.image_info = self.get_image_info()
@@ -146,7 +146,9 @@ class UnitySimulator(Simulator):
         # retrieve image information
         image_info = json.loads(self.receive_in_chunks(self.data_socket, 1024).decode('utf-8'))
         #image_info = json.loads(self.data_socket.recv(1000).decode('utf-8'))
+        print("send akn on data")
         self.data_socket.send('AKN'.encode('utf-8'))
+        print("did it")
         self.control_socket.recv(50)
         
         return image_info
@@ -178,12 +180,14 @@ class UnitySimulator(Simulator):
         # todo: get receive in chunks to work
         # image_bytes = self.receive_in_chunks(self.video_socket, self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
         image_bytes= self.video_socket.recv(self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
-        print(image_bytes)
+        #print(image_bytes)
         image_data : NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
         image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
+        image_data = np.flipud(image_data)
 
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
+        
         return image_data
 
     # to be implemented

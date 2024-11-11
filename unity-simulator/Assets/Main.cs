@@ -12,6 +12,7 @@ using System.Linq;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Globalization;
 
 public class Main
 {
@@ -30,6 +31,9 @@ public class Main
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
 
     static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
+
+    static bool img_akn_recieved = false;
+    static bool data_akn_recieved = false;
 
     static Agent agent;
     
@@ -152,7 +156,8 @@ public class Main
          
         while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            Debug.Log("Received on vid: " + message);
+            Debug.Log("Received on video: " + message);
+            img_akn_recieved = true;
 
         }
 
@@ -169,9 +174,10 @@ public class Main
         byte[] buffer = new byte[1024];
         int bytesRead;
          
-        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
+        while ((bytesRead = dataStream.Read(buffer, 0, buffer.Length)) != 0){
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received on data: " + message);
+            data_akn_recieved = true;
 
         }
     }
@@ -230,10 +236,15 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        float x = float.Parse(param[0]);
-        float y = float.Parse(param[1]);
-        float yaw = float.Parse(param[2]);
-        agent.move(x, y, yaw);
+        float x = float.Parse(param[0],CultureInfo.InvariantCulture);
+        float y = float.Parse(param[1],CultureInfo.InvariantCulture);
+        float yaw = float.Parse(param[2],CultureInfo.InvariantCulture);
+        Debug.Log(x);
+        Debug.Log(y);
+        RunOnMainThread(() => {
+            agent.move(x, y, yaw);
+        });
+
         Debug.Log("stepped it up");
         controlStream.Write(aknBytes, 0, aknBytes.Length);    
         Debug.Log("told everyone");    
@@ -246,10 +257,12 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string image_info = JsonUtility.ToJson(new ImageInfo {width = 4*4, height=4, channels=3, format="rgb"});
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = 1920*4, height=1080, channels=3, format="rgb"});
         Debug.Log(image_info);
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
         
     }
@@ -261,8 +274,13 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-
-        int[,] image = agent.get_image();
+        int[,] image = new int[1,1];
+        RunOnMainThread(() => {
+            image = agent.get_image();
+        });
+        while(image.GetLength(0) == 1){
+            Debug.Log("waiting for image!");
+        }
         // convert image array into byte array for transfer
         int rows = image.GetLength(0);
         int cols = image.GetLength(1);
@@ -275,9 +293,13 @@ public class Main
             }
         }
 
-        send_data(videoStream, byteArray);
-        //videoStream.Write(byteArray, 0, byteArray.Length);
-        // todo: wait for akn from interface on video stream
+        //send_data(videoStream, byteArray);
+
+        videoStream.Write(byteArray, 0, byteArray.Length);
+        while(!img_akn_recieved){};
+        img_akn_recieved = false;
+        Debug.Log("img send done");
+        videoStream.Flush();
         controlStream.Write(aknBytes, 0, aknBytes.Length);
 
     }
