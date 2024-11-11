@@ -191,7 +191,8 @@ public class Main
         /// <param name="data">The data that will be send</param>
         //---------------------------------------------------------------------
         Debug.Log(data != null);
-        data = data.Concat(Encoding.Default.GetBytes("!unityservereod!")).ToArray();
+        data = data.Concat(Encoding.UTF8.GetBytes("!unityservereod!")).ToArray();
+        
         Debug.Log(data != null);
         stream.Write(data, 0, data.Length);
     }
@@ -257,7 +258,7 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string image_info = JsonUtility.ToJson(new ImageInfo {width = 1920*4, height=1080, channels=3, format="rgb"});
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = 7680, height=1080, channels=3, format="rgb"});
         Debug.Log(image_info);
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
@@ -286,16 +287,16 @@ public class Main
         int cols = image.GetLength(1);
         int elements = rows * cols;
         // elements * 4 because each int takes up 4 bytes
-        byte[] byteArray = new byte[elements * 4];
+        byte[] byteArray = new byte[elements];
         for (int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
                 byteArray[i*cols+j] = (byte)image[i,j];
             }
         }
+        Debug.Log(byteArray.Length);
+        send_data(videoStream, byteArray);
 
-        //send_data(videoStream, byteArray);
-
-        videoStream.Write(byteArray, 0, byteArray.Length);
+        //videoStream.Write(byteArray, 0, byteArray.Length);
         while(!img_akn_recieved){};
         img_akn_recieved = false;
         Debug.Log("img send done");
