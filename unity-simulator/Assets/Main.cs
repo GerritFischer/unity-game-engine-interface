@@ -35,6 +35,7 @@ public class Main
     static bool img_akn_recieved = false;
     static bool data_akn_recieved = false;
 
+
     static Agent agent;
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -143,7 +144,6 @@ public class Main
 
     }
     static void HandleVideoClient(TcpClient client){
-
         //---------------------------------------------------------------------
         /// <summary>
         /// Handles the video socket
@@ -158,7 +158,6 @@ public class Main
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received on video: " + message);
             img_akn_recieved = true;
-
         }
 
     }
@@ -178,8 +177,8 @@ public class Main
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received on data: " + message);
             data_akn_recieved = true;
-
         }
+
     }
 
     static void send_data(NetworkStream stream, byte[] data){
@@ -190,10 +189,7 @@ public class Main
         /// <param name="stream">The stream which the data will be written to</param>
         /// <param name="data">The data that will be send</param>
         //---------------------------------------------------------------------
-        Debug.Log(data != null);
         data = data.Concat(Encoding.UTF8.GetBytes("!unityservereod!")).ToArray();
-        
-        Debug.Log(data != null);
         stream.Write(data, 0, data.Length);
     }
 
@@ -230,7 +226,6 @@ public class Main
     }
 
     static void step_simulation_without_physics(string[] param){
-        Debug.Log("stepping it up");
         //---------------------------------------------------------------------
         /// <summary>
         /// Invokes the move method of the agent and steps simulation
@@ -240,15 +235,11 @@ public class Main
         float x = float.Parse(param[0],CultureInfo.InvariantCulture);
         float y = float.Parse(param[1],CultureInfo.InvariantCulture);
         float yaw = float.Parse(param[2],CultureInfo.InvariantCulture);
-        Debug.Log(x);
-        Debug.Log(y);
         RunOnMainThread(() => {
             agent.move(x, y, yaw);
         });
 
-        Debug.Log("stepped it up");
         controlStream.Write(aknBytes, 0, aknBytes.Length);    
-        Debug.Log("told everyone");    
     }
 
     static void get_image_info(string[] param){
@@ -258,14 +249,13 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string image_info = JsonUtility.ToJson(new ImageInfo {width = 256*4, height=256, channels=3, format="rgb"});
-        Debug.Log(image_info);
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = agent.get_image_info()[0], height=agent.get_image_info()[1], channels=3, format="rgb"});
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
+        // wait for akn for data socket 
         while(!data_akn_recieved){};
         data_akn_recieved = false;
-        controlStream.Write(aknBytes, 0, aknBytes.Length);
-        
+        controlStream.Write(aknBytes, 0, aknBytes.Length);   
     }
 
     static void get_image(string[] param){
