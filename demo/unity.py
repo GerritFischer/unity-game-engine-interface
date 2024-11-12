@@ -31,7 +31,7 @@ class UnitySimulator(Simulator):
         # ensure that the simulator executable was provided
         if not running:
             if executable is None:
-                error_msg = 'ERROR: Unity executable path was neither set or given as argument!'
+                error_msg: str = 'ERROR: Unity executable path was neither set or given as argument!'
                 assert 'UNITY_EXECUTABLE' in os.environ, error_msg
                 self.executable = os.environ['UNITY_EXECUTABLE']
             else:
@@ -59,26 +59,25 @@ class UnitySimulator(Simulator):
                 print("Couldn't connect to unity simulator, retrying...")
 
         # load scene
-        #self.change_scene(scene_name)
+        self.change_scene(scene_name)
 
         # get image info of agent
-        self.image_info = self.get_image_info()
+        self.image_info: ImageInfo = self.get_image_info()
 
         print("Unity simulator initialized!")
-
 
     def receive_in_chunks(self, socket: socket.socket, chunk_size: int) -> bytes:
         '''
         This function reads data in chunks from a socket.
-        
+
         Parameters
         ----------
-        socket :                            The socket to read the data from.\n
-        chunk_size :                        The size of the chunk to read.\n
-        
+        socket :                            The socket to read the data from.
+        chunk_size :                        The size of the chunk to read.
+
         Returns
         ----------
-        data :                              The data as a byte string.\n
+        data :                              The data as a byte string.
         '''
         # define buffer
         data = b''
@@ -86,9 +85,9 @@ class UnitySimulator(Simulator):
         while True:
             data_chunk = socket.recv(chunk_size)
             data += data_chunk
-            if data[-16:] ==  b'!unityservereod!':
+            if data[-16:] == b'!unityservereod!':
                 break
-        
+
         return data[:-16]
 
     def echo(self, message: str) -> str:
@@ -132,38 +131,34 @@ class UnitySimulator(Simulator):
     def get_image_info(self) -> ImageInfo:
         '''
         This function retrieves image information from the simulation.
-        
+
         Parameters
         ----------
         None
-        
+
         Returns
         ----------
-        image_info :                        A dictionary containing information about the images rendered by Unity (i.e. dimensions, channels, format).\n
+        image_info :            A dictionary containing information about the images rendered by Unity (i.e. dimensions, channels, format).
         '''
-        # send the request for image information change to unity
+        # send the request for image information to unity
         self.control_socket.send(json.dumps({'command': 'get_image_info', 'param': []}).encode('utf-8'))
         # retrieve image information
-        image_info = json.loads(self.receive_in_chunks(self.data_socket, 1024).decode('utf-8'))
-        #image_info = json.loads(self.data_socket.recv(1000).decode('utf-8'))
-        print("send akn on data")
+        image_info: ImageInfo = json.loads(self.receive_in_chunks(self.data_socket, 1024).decode('utf-8'))
         self.data_socket.send('AKN'.encode('utf-8'))
-        print("did it")
         self.control_socket.recv(50)
-        
+
         return image_info
 
-        
     def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
         '''
         This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
-        
+
         Parameters
         ----------
         x :                                 The global x position to teleport to.
         y :                                 The global y position to teleport to.
         yaw :                               The global yaw value to teleport to.
-        
+
         Returns
         ----------
         pose_data :                         The pose observation received from the simulation.
@@ -173,21 +168,20 @@ class UnitySimulator(Simulator):
         send_str = json.dumps({'command': 'step_simulation_without_physics', 'param': [x, y, yaw]})
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
-        
-        #retrieve image
-        send_str = json.dumps({'command': 'get_image', 'param': []})
+
+        # retrieve image
+        send_str: str = json.dumps({'command': 'get_image', 'param': []})
         self.control_socket.send(send_str.encode('utf-8'))
-        # todo: get receive in chunks to work
-        image_bytes = self.receive_in_chunks(self.video_socket, self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
-        #image_bytes= self.video_socket.recv(self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
+        image_bytes: bytes = self.receive_in_chunks(self.video_socket, self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
 
-        image_data : NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
+        # convert image into right format
+        image_data: NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
         image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
-
 
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
-        
+
+        # TODO: return pose aswell
         return image_data
 
     # to be implemented
