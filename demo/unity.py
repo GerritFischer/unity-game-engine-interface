@@ -183,7 +183,7 @@ class UnitySimulator(Simulator):
 
         image_data : NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
         image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
-        image_data = np.flipud(image_data)
+
 
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)

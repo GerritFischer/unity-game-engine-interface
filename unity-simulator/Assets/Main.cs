@@ -258,7 +258,7 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string image_info = JsonUtility.ToJson(new ImageInfo {width = 7680, height=1080, channels=3, format="rgb"});
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = 256*4, height=256, channels=3, format="rgb"});
         Debug.Log(image_info);
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
@@ -279,9 +279,7 @@ public class Main
         RunOnMainThread(() => {
             image = agent.get_image();
         });
-        while(image.GetLength(0) == 1){
-            Debug.Log("waiting for image!");
-        }
+        while(image.GetLength(0) == 1){};
         // convert image array into byte array for transfer
         int rows = image.GetLength(0);
         int cols = image.GetLength(1);
@@ -299,8 +297,6 @@ public class Main
         //videoStream.Write(byteArray, 0, byteArray.Length);
         while(!img_akn_recieved){};
         img_akn_recieved = false;
-        Debug.Log("img send done");
-        videoStream.Flush();
         controlStream.Write(aknBytes, 0, aknBytes.Length);
 
     }

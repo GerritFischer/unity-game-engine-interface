@@ -28,6 +28,7 @@ public class Agent : MonoBehaviour
         camObjects[3]=camObject_w;
 
         //set default settings for camera
+        RenderTexture renderTexture = new RenderTexture(256,256, 16); 
         for (int i = 0; i<4; i++){
             //becomes child of agent
             camObjects[i].transform.parent = this.transform;
@@ -38,6 +39,8 @@ public class Agent : MonoBehaviour
             cams[i].cullingMask = ~(1 << 31);
             //set Camera field of View
             cams[i].fieldOfView=90.0f;
+            //set render texture of cams
+            cams[i].targetTexture = renderTexture;
         }
         //set direction of cameras gameobject
         camObjects[0].transform.forward = Vector3.forward;
@@ -60,26 +63,21 @@ public class Agent : MonoBehaviour
 
     public int[,] get_image(){
         
-        int final_height = 1080;
-        const int width = 1920;
+        int final_height = 256;
+        const int width = 256;
         int final_width = width * 4;
         
         int[,,] images = new int[4, final_height*width, 3];
         for(int i = 0; i < 4; i++){
-            RenderTexture renderT = new RenderTexture(1920,1080, 16); 
-            cams[i].targetTexture = renderT;
-            var currentRT = RenderTexture.active;
             RenderTexture.active = cams[i].targetTexture;
             cams[i].Render();
             Texture2D image_raw = new Texture2D(cams[i].targetTexture.width, cams[i].targetTexture.height);
             image_raw.ReadPixels(new Rect(0,0, cams[i].targetTexture.width, cams[i].targetTexture.height), 0,0);
             image_raw.Apply();
-            RenderTexture.active = currentRT;
             Color[] colors = image_raw.GetPixels();
             for(int x = 0; x < width; x++){
                 for(int y = 0; y < final_height; y++){
                     Color c = colors[y*width + x];
-
                     images[i, y*width+x, 0] = Mathf.RoundToInt(c.r * 255);
                     images[i, y*width+x, 1] = Mathf.RoundToInt(c.g * 255);
                     images[i, y*width+x, 2] = Mathf.RoundToInt(c.b * 255);
@@ -88,68 +86,17 @@ public class Agent : MonoBehaviour
         }
         
     
-    
         int[,] finalImage = new int[final_width * final_height, 3];
-        int[,] image_n = {
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0},
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0},
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0},
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0}
-        };
 
-        int[,] image_o = {
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255},
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255},
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255},
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255}
-        };
-
-        int[,] image_s = {
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255},
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255},
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255},
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255}
-        };
-
-        int[,] image_w = {
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255},
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255},
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255},
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255}
-        };
 
         for(int x = 0; x < final_width; x++){
             for(int y = 0; y < final_height; y++){
-                int[] pixel = new int[3];
-                switch(x){
-                    case < width * 1:
-                        pixel[0] = images[0, y*width + (x % width),0];
-                        pixel[1] = images[0,y*width + (x % width),1];
-                        pixel[2] = images[0,y*width + (x % width),2];
-                    break; 
-                    case < width * 2:
-                        pixel[0] = images[1,y*width + (x % width),0];
-                        pixel[1] = images[1,y*width + (x % width),1];
-                        pixel[2] = images[1,y*width + (x % width),2];
-                        
-                    break;
-                    case < width * 3:
-                        pixel[0] = images[2,y*width + (x % width),0];
-                        pixel[1] = images[2,y*width + (x % width),1];
-                        pixel[2] = images[2,y*width + (x % width),2];
-                    break;    
-                    case < width * 4:
-                        pixel[0] = images[3,y*width + (x % width),0];
-                        pixel[1] = images[3,y*width + (x % width),1];
-                        pixel[2] = images[3,y*width + (x % width),2];
-                    break;               
-                }
-                finalImage[y*final_width+x,0] = pixel[0];
-                finalImage[y*final_width+x,1] = pixel[1];
-                finalImage[y*final_width+x,2] = pixel[2];
+                int index = (int) Math.Floor((float) x / width);
+                finalImage[y*final_width+x,0] = images[index, width * final_height - width - y*width + (x % width),0];
+                finalImage[y*final_width+x,1] = images[index,width * final_height - width - y*width + (x % width),1];
+                finalImage[y*final_width+x,2] = images[index,width * final_height - width - y*width + (x % width),2];
             }
         }
-        Debug.Log("new image generated");
         return finalImage;
     }
 }
