@@ -10,8 +10,6 @@ using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Globalization;
 
 public class Main
