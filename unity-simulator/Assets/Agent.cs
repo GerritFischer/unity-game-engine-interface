@@ -8,12 +8,18 @@ public class Agent : MonoBehaviour
     private Camera[] cams = {null, null, null, null};
     private GameObject[] camObjects = {null, null, null, null};
 
-    static int IMAGE_HEIGHT = 256;
-    static int IMAGE_WIDTH = 256;
+    private const int IMAGE_HEIGHT = 256;
+    private const int IMAGE_WIDTH = 256;
 
-    static int FINAL_WIDTH = IMAGE_WIDTH * 4;
+    private const int FINAL_WIDTH = IMAGE_WIDTH * 4;
     // Start is called before the first frame update
     void Awake(){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Initiates the agent class, create 4 child objects with camera components
+        /// and set various properties of the cameras
+        /// </summary>
+        //---------------------------------------------------------------------
         Debug.Log("Agent class initiated");
 
         // set game object layer to last layer so we can remove 
@@ -56,6 +62,15 @@ public class Agent : MonoBehaviour
     }
 
     public void move(float x ,float z, float yaw){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Moves the agent into a desired pose
+        /// </summary>
+        /// <param name="x"=Coordinate of the x-axis to teleport to</param>
+        /// <param name="z"=Coordinate of the z-axis to teleport to</param>
+        /// <param name="yaw"=Rotation of the agent in (TODO: TOMMY!! rad or degree)</param>
+        //---------------------------------------------------------------------
+
         //set new steps and rotation for agent
         gameObject.transform.position = new Vector3(x,0,z);
         gameObject.transform.Rotate(0.0f, (float)(yaw * 360 / (Mathf.PI * 2)), 0.0f, Space.Self);
@@ -67,11 +82,24 @@ public class Agent : MonoBehaviour
     }
 
     public int[] get_image_info(){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the width and height of the final image
+        /// </summary>
+        //---------------------------------------------------------------------
         return new int[2]{FINAL_WIDTH, IMAGE_HEIGHT};
     }
 
     public int[,] get_image(){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Retrieves the current images from all 4 cameras and converts them into
+        /// one big image. Returns a 2d int array with the pixels and corresponding
+        /// RGB values in the range of 0-255.
+        /// </summary>
+        //---------------------------------------------------------------------
         
+        // retrieve single images
         int[,,] images = new int[4, IMAGE_HEIGHT*FINAL_WIDTH, 3];
         for(int i = 0; i < 4; i++){
             RenderTexture.active = cams[i].targetTexture;
@@ -88,12 +116,9 @@ public class Agent : MonoBehaviour
                     images[i, y*IMAGE_WIDTH+x, 2] = Mathf.RoundToInt(c.b * 255);
                 }
             }
-        }
-        
-    
+        }  
+        // convert into one image
         int[,] finalImage = new int[FINAL_WIDTH * IMAGE_HEIGHT, 3];
-
-
         for(int x = 0; x < FINAL_WIDTH; x++){
             for(int y = 0; y < IMAGE_HEIGHT; y++){
                 int index = (int) Math.Floor((float) x / IMAGE_WIDTH);

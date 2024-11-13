@@ -14,27 +14,22 @@ using System.Globalization;
 
 public class Main
 {
-    static private TcpListener controlSocket, videoSocket, dataSocket;
-    static private TcpClient controlClient, videoClient, dataClient;
-    static private NetworkStream controlStream, videoStream, dataStream;
-    static private Thread socketThread;
-    static bool connected;
+    private static TcpListener controlSocket, videoSocket, dataSocket;
+    private static TcpClient controlClient, videoClient, dataClient;
+    private static NetworkStream controlStream, videoStream, dataStream;
+    private static Thread socketThread;
+    private static bool connected;
 
     //actions to be run on the main thread of unity
     private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
     //context to access the main thread from the client threads
     private static SynchronizationContext mainThreadContext;
-
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-
-    static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
-
-    static bool img_akn_recieved = false;
-    static bool data_akn_recieved = false;
-
-
-    static Agent agent;
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
+    private static bool img_akn_recieved = false;
+    private static bool data_akn_recieved = false;
+    private static Agent agent;
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void OnStart() {
@@ -49,6 +44,7 @@ public class Main
         SceneManager.sceneLoaded+=createAgent;
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
+        // if this function is called without a new thread unity wont compile (for some reason)
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
         socketThread.IsBackground = true;
         socketThread.Start();

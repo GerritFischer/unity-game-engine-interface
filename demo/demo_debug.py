@@ -1,3 +1,6 @@
+#============================================================================
+# NOTE: THIS FILE IS JUST FOR DEBUGGING AND TESTING AND WILL BE DELETED LATER
+# =========================================================================== 
 # framework imports
 from unity import UnitySimulator
 # from matplotlib import pyplot as plt

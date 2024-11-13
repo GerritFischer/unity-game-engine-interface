@@ -18,6 +18,7 @@ def single_run() -> None:
 
 
     class ImageWindow(QWidget):
+        # window class to display image from simulator
         def __init__(self):
             super().__init__()
 
