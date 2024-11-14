@@ -1,6 +1,11 @@
 # framework imports
 from unity import UnitySimulator
-import time
+# from matplotlib import pyplot as plt
+# from matplotlib.animation import FuncAnimation
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QPainter, QImage
+from PyQt6.QtWidgets import QApplication, QWidget
+import sys
 
 
 def single_run() -> None:
@@ -10,18 +15,41 @@ def single_run() -> None:
     '''
     # init simulator
     simulator = UnitySimulator(scene_name='debug_1')
-    print(simulator.echo("Test"))
 
-    for i in range(3):
-        time.sleep(1)
-        simulator.change_scene("debug_2")
-        time.sleep(1)
-        simulator.change_scene("debug_3")
-        time.sleep(1)
-        simulator.change_scene("debug_1")
 
-    print("Press ANY key to exit...")
-    input()
+    class ImageWindow(QWidget):
+        # window class to display image from simulator
+        def __init__(self):
+            super().__init__()
+
+            self.update_qimage()
+
+            # Set up a timer to update the pixmap every 33 ms (30 frames per second)
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.update_qimage)
+            self.timer.start(33)
+
+            # Set window properties
+            self.setWindowTitle("Image demo")
+            self.setGeometry(100, 100, 1024, 256)
+
+        def paintEvent(self, event):
+            # Paint the qimage on the window
+            painter = QPainter(self)
+            painter.drawImage(0, 0, self.qimage)
+
+        def update_qimage(self):
+            arr = simulator.move_agent(0, 0, 0.01)
+            # generate qimage
+            self.qimage = QImage(arr.data, arr.shape[1], arr.shape[0], arr.shape[1] * 3, QImage.Format.Format_RGB888)
+            # trigger a repaint
+            self.update()
+
+# Create the application and run the main window
+    app = QApplication(sys.argv)
+    window = ImageWindow()
+    window.show()
+    app.exec()
 
 
 if __name__ == '__main__':

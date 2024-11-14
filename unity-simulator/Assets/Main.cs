@@ -10,28 +10,26 @@ using UnityEngine.SceneManagement;
 using System.Reflection;
 using System.Linq;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Globalization;
 
 public class Main
 {
-    static private TcpListener controlSocket, videoSocket, dataSocket;
-    static private TcpClient controlClient, videoClient, dataClient;
-    static private NetworkStream controlStream, videoStream, dataStream;
-    static private Thread socketThread;
-    static bool connected;
+    private static TcpListener controlSocket, videoSocket, dataSocket;
+    private static TcpClient controlClient, videoClient, dataClient;
+    private static NetworkStream controlStream, videoStream, dataStream;
+    private static Thread socketThread;
+    private static bool connected;
 
     //actions to be run on the main thread of unity
     private static readonly ConcurrentQueue<Action> mainThreadActions = new ConcurrentQueue<Action>();
     //context to access the main thread from the client threads
     private static SynchronizationContext mainThreadContext;
-
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-
-    static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
-
-    static Agent agent;
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
+    private static bool img_akn_recieved = false;
+    private static bool data_akn_recieved = false;
+    private static Agent agent;
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void OnStart() {
@@ -46,6 +44,7 @@ public class Main
         SceneManager.sceneLoaded+=createAgent;
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
+        // if this function is called without a new thread unity wont compile (for some reason)
         socketThread = new Thread(new ThreadStart(StartSocketProcess));
         socketThread.IsBackground = true;
         socketThread.Start();
@@ -139,7 +138,6 @@ public class Main
 
     }
     static void HandleVideoClient(TcpClient client){
-
         //---------------------------------------------------------------------
         /// <summary>
         /// Handles the video socket
@@ -152,8 +150,8 @@ public class Main
          
         while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            Debug.Log("Received on vid: " + message);
-
+            Debug.Log("Received on video: " + message);
+            img_akn_recieved = true;
         }
 
     }
@@ -169,11 +167,12 @@ public class Main
         byte[] buffer = new byte[1024];
         int bytesRead;
          
-        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
+        while ((bytesRead = dataStream.Read(buffer, 0, buffer.Length)) != 0){
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received on data: " + message);
-
+            data_akn_recieved = true;
         }
+
     }
 
     static void send_data(NetworkStream stream, byte[] data){
@@ -184,9 +183,7 @@ public class Main
         /// <param name="stream">The stream which the data will be written to</param>
         /// <param name="data">The data that will be send</param>
         //---------------------------------------------------------------------
-        Debug.Log(data != null);
-        data = data.Concat(Encoding.Default.GetBytes("!unityservereod!")).ToArray();
-        Debug.Log(data != null);
+        data = data.Concat(Encoding.UTF8.GetBytes("!unityservereod!")).ToArray();
         stream.Write(data, 0, data.Length);
     }
 
@@ -223,20 +220,20 @@ public class Main
     }
 
     static void step_simulation_without_physics(string[] param){
-        Debug.Log("stepping it up");
         //---------------------------------------------------------------------
         /// <summary>
         /// Invokes the move method of the agent and steps simulation
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        float x = float.Parse(param[0]);
-        float y = float.Parse(param[1]);
-        float yaw = float.Parse(param[2]);
-        agent.move(x, y, yaw);
-        Debug.Log("stepped it up");
+        float x = float.Parse(param[0],CultureInfo.InvariantCulture);
+        float y = float.Parse(param[1],CultureInfo.InvariantCulture);
+        float yaw = float.Parse(param[2],CultureInfo.InvariantCulture);
+        RunOnMainThread(() => {
+            agent.move(x, y, yaw);
+        });
+
         controlStream.Write(aknBytes, 0, aknBytes.Length);    
-        Debug.Log("told everyone");    
     }
 
     static void get_image_info(string[] param){
@@ -246,12 +243,13 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string image_info = JsonUtility.ToJson(new ImageInfo {width = 4*4, height=4, channels=3, format="rgb"});
-        Debug.Log(image_info);
+        string image_info = JsonUtility.ToJson(new ImageInfo {width = agent.get_image_info()[0], height=agent.get_image_info()[1], channels=3, format="rgb"});
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
-        controlStream.Write(aknBytes, 0, aknBytes.Length);
-        
+        // wait for akn for data socket 
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
+        controlStream.Write(aknBytes, 0, aknBytes.Length);   
     }
 
     static void get_image(string[] param){
@@ -261,23 +259,28 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-
-        int[,] image = agent.get_image();
+        int[,] image = new int[1,1];
+        RunOnMainThread(() => {
+            image = agent.get_image();
+        });
+        while(image.GetLength(0) == 1){};
         // convert image array into byte array for transfer
         int rows = image.GetLength(0);
         int cols = image.GetLength(1);
         int elements = rows * cols;
         // elements * 4 because each int takes up 4 bytes
-        byte[] byteArray = new byte[elements * 4];
+        byte[] byteArray = new byte[elements];
         for (int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
                 byteArray[i*cols+j] = (byte)image[i,j];
             }
         }
-
+        Debug.Log(byteArray.Length);
         send_data(videoStream, byteArray);
+
         //videoStream.Write(byteArray, 0, byteArray.Length);
-        // todo: wait for akn from interface on video stream
+        while(!img_akn_recieved){};
+        img_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
 
     }

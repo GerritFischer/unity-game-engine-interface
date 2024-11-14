@@ -7,8 +7,19 @@ public class Agent : MonoBehaviour
 {
     private Camera[] cams = {null, null, null, null};
     private GameObject[] camObjects = {null, null, null, null};
+
+    private const int IMAGE_HEIGHT = 256;
+    private const int IMAGE_WIDTH = 256;
+
+    private const int FINAL_WIDTH = IMAGE_WIDTH * 4;
     // Start is called before the first frame update
     void Awake(){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Initiates the agent class, create 4 child objects with camera components
+        /// and set various properties of the cameras
+        /// </summary>
+        //---------------------------------------------------------------------
         Debug.Log("Agent class initiated");
 
         // set game object layer to last layer so we can remove 
@@ -18,16 +29,17 @@ public class Agent : MonoBehaviour
 
         GameObject camObject_n = new GameObject("camera_n");
         GameObject camObject_e = new GameObject("camera_e");
-        GameObject camObject_w = new GameObject("camera_w");
         GameObject camObject_s = new GameObject("camera_s");
+        GameObject camObject_w = new GameObject("camera_w");
 
         //save Gameobject instance
         camObjects[0]=camObject_n;
         camObjects[1]=camObject_e;
-        camObjects[2]=camObject_w;
-        camObjects[3]=camObject_s;
+        camObjects[2]=camObject_s;
+        camObjects[3]=camObject_w;
 
         //set default settings for camera
+        RenderTexture renderTexture = new RenderTexture(256,256, 16); 
         for (int i = 0; i<4; i++){
             //becomes child of agent
             camObjects[i].transform.parent = this.transform;
@@ -38,16 +50,27 @@ public class Agent : MonoBehaviour
             cams[i].cullingMask = ~(1 << 31);
             //set Camera field of View
             cams[i].fieldOfView=90.0f;
+            //set render texture of cams
+            cams[i].targetTexture = renderTexture;
         }
         //set direction of cameras gameobject
         camObjects[0].transform.forward = Vector3.forward;
         camObjects[1].transform.forward = Vector3.right;
-        camObjects[2].transform.forward = Vector3.left;
-        camObjects[3].transform.forward = Vector3.back;
+        camObjects[2].transform.forward = Vector3.back;
+        camObjects[3].transform.forward = Vector3.left;
         //move(1f,1f,(float) (Math.PI/2));
     }
 
     public void move(float x ,float z, float yaw){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Moves the agent into a desired pose
+        /// </summary>
+        /// <param name="x"=Coordinate of the x-axis to teleport to</param>
+        /// <param name="z"=Coordinate of the z-axis to teleport to</param>
+        /// <param name="yaw"=Rotation of the agent in (TODO: TOMMY!! rad or degree)</param>
+        //---------------------------------------------------------------------
+
         //set new steps and rotation for agent
         gameObject.transform.position = new Vector3(x,0,z);
         gameObject.transform.Rotate(0.0f, (float)(yaw * 360 / (Mathf.PI * 2)), 0.0f, Space.Self);
@@ -58,76 +81,51 @@ public class Agent : MonoBehaviour
         }
     }
 
+    public int[] get_image_info(){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Returns the width and height of the final image
+        /// </summary>
+        //---------------------------------------------------------------------
+        return new int[2]{FINAL_WIDTH, IMAGE_HEIGHT};
+    }
+
     public int[,] get_image(){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// Retrieves the current images from all 4 cameras and converts them into
+        /// one big image. Returns a 2d int array with the pixels and corresponding
+        /// RGB values in the range of 0-255.
+        /// </summary>
+        //---------------------------------------------------------------------
         
-        int final_height = 4;
-        const int width = 4;
-        int final_width = width * 4;
-        
-
-        int[,] finalImage = new int[final_width * final_height, 3];
-        int[,] image_n = {
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0},
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0},
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0},
-            {255, 255, 0}, {255, 255, 0}, {255, 255, 0}, {255, 255, 0}
-        };
-
-        int[,] image_o = {
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255},
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255},
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255},
-            {255, 0, 255}, {255, 0, 255}, {255, 0, 255}, {255, 0, 255}
-        };
-
-        int[,] image_s = {
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255},
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255},
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255},
-            {0, 255, 255}, {0, 255, 255}, {0, 255, 255}, {0, 255, 255}
-        };
-
-        int[,] image_w = {
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255},
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255},
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255},
-            {255, 255, 255}, {255, 255, 255}, {255, 255, 255}, {255, 255, 255}
-        };
-
-        for(int x = 0; x < final_width; x++){
-            for(int y = 0; y < final_height; y++){
-                int[] pixel = new int[3];
-                switch(x){
-                    case < width * 1:
-                        pixel[0] = image_n[y*width + (x % width),0];
-                        pixel[1] = image_n[y*width + (x % width),1];
-                        pixel[2] = image_n[y*width + (x % width),2];
-                    break; 
-                    case < width * 2:
-                        pixel[0] = image_o[y*width + (x % width),0];
-                        pixel[1] = image_o[y*width + (x % width),1];
-                        pixel[2] = image_o[y*width + (x % width),2];
-                        
-                    break;
-                    case < width * 3:
-                        pixel[0] = image_s[y*width + (x % width),0];
-                        pixel[1] = image_s[y*width + (x % width),1];
-                        pixel[2] = image_s[y*width + (x % width),2];
-                    break;    
-                    case < width * 4:
-                        pixel[0] = image_w[y*width + (x % width),0];
-                        pixel[1] = image_w[y*width + (x % width),1];
-                        pixel[2] = image_w[y*width + (x % width),2];
-                    break;               
+        // retrieve single images
+        int[,,] images = new int[4, IMAGE_HEIGHT*FINAL_WIDTH, 3];
+        for(int i = 0; i < 4; i++){
+            RenderTexture.active = cams[i].targetTexture;
+            cams[i].Render();
+            Texture2D image_raw = new Texture2D(cams[i].targetTexture.width, cams[i].targetTexture.height);
+            image_raw.ReadPixels(new Rect(0,0, cams[i].targetTexture.width, cams[i].targetTexture.height), 0,0);
+            image_raw.Apply();
+            Color[] colors = image_raw.GetPixels();
+            for(int x = 0; x < IMAGE_WIDTH; x++){
+                for(int y = 0; y < IMAGE_HEIGHT; y++){
+                    Color c = colors[y*IMAGE_WIDTH + x];
+                    images[i, y*IMAGE_WIDTH+x, 0] = Mathf.RoundToInt(c.r * 255);
+                    images[i, y*IMAGE_WIDTH+x, 1] = Mathf.RoundToInt(c.g * 255);
+                    images[i, y*IMAGE_WIDTH+x, 2] = Mathf.RoundToInt(c.b * 255);
                 }
-                finalImage[y*final_width+x,0] = pixel[0];
-                finalImage[y*final_width+x,1] = pixel[1];
-                finalImage[y*final_width+x,2] = pixel[2];
             }
-        }
-        
-        foreach (int item in finalImage){
-            Debug.Log(item); 
+        }  
+        // convert into one image
+        int[,] finalImage = new int[FINAL_WIDTH * IMAGE_HEIGHT, 3];
+        for(int x = 0; x < FINAL_WIDTH; x++){
+            for(int y = 0; y < IMAGE_HEIGHT; y++){
+                int index = (int) Math.Floor((float) x / IMAGE_WIDTH);
+                finalImage[y*FINAL_WIDTH+x,0] = images[index, IMAGE_WIDTH * IMAGE_HEIGHT - IMAGE_WIDTH - y*IMAGE_WIDTH + (x % IMAGE_WIDTH),0];
+                finalImage[y*FINAL_WIDTH+x,1] = images[index,IMAGE_WIDTH * IMAGE_HEIGHT - IMAGE_WIDTH - y*IMAGE_WIDTH + (x % IMAGE_WIDTH),1];
+                finalImage[y*FINAL_WIDTH+x,2] = images[index,IMAGE_WIDTH * IMAGE_HEIGHT - IMAGE_WIDTH - y*IMAGE_WIDTH + (x % IMAGE_WIDTH),2];
+            }
         }
         return finalImage;
     }
