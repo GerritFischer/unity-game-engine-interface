@@ -26,7 +26,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -362,6 +362,55 @@ public class Main
 
     }
 
+    private static void get_objects(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// gets all the Game Objects in the current unity scene and sends them back in a Dictionary
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        GameObject[] all_Objects = null;
+        ObjectInfo objectInfo = new ObjectInfo();
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
+        RunOnMainThread(() =>  {    //FindObjectsOfType and getter for Game Object can only run on main Thread
+        
+            all_Objects = GameObject.FindObjectsOfType<GameObject>();
+            List<string> keyList = new List<string>();
+            List<string> nameList = new List<string>();
+            List<string> valueList = new List<string>();
+
+            foreach(GameObject go in all_Objects){
+                keyList.Add(go.GetInstanceID().ToString());
+                nameList.Add(go.name);
+                valueList.Add(go.GetType().ToString());
+            }
+
+            objectInfo.keys = keyList.ToArray();
+            objectInfo.names = nameList.ToArray();
+            objectInfo.values = valueList.ToArray();
+            mainFin.Set();    
+        });
+
+        mainFin.Wait();
+        //main thread is finished now turning it into bytes
+        string all_info_string = JsonUtility.ToJson(objectInfo);
+        byte[] all_info_bytes = Encoding.UTF8.GetBytes(all_info_string);
+
+
+        string bytesize = all_info_bytes.Length.ToString();    
+        byte[] all_info_bytes_length = Encoding.UTF8.GetBytes(bytesize);
+                
+        send_data(dataStream,all_info_bytes_length);
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
+        send_data(dataStream, all_info_bytes);
+        //aknowledgement for sending both
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+        
+    }
+
 }
 
 [System.Serializable]
@@ -387,4 +436,20 @@ public class ImageInfo
     public int height;
     public int channels;
     public string format;
+}
+
+[System.Serializable]
+
+public class ObjectInfo
+{
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Class for storing object info
+    /// </summary>
+    //---------------------------------------------------------------------
+    public string[] keys;
+    public string[] names;
+    public string[] values;
+    
+
 }

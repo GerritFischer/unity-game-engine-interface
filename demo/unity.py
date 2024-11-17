@@ -7,7 +7,7 @@ import numpy as np
 # framework imports
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 # typing imports
-from typing import Any, TypedDict
+from typing import Any, TypedDict, List
 from numpy.typing import NDArray
 
 
@@ -189,7 +189,29 @@ class UnitySimulator(Simulator):
         return super().get_illumination(light_source)
 
     def get_objects(self) -> dict[str, Any]:
-        return super().get_objects()
+
+        send_str: str = json.dumps({'command': 'get_objects', "param": []})
+        self.control_socket.send(send_str.encode('utf-8'))
+
+        byteLenght = self.data_socket.recv(50)
+        self.data_socket.send('AKN'.encode('utf-8'))
+        byteSize = int(byteLenght[:-16].decode("utf-8"))
+
+        allInfos: bytes = self.receive_in_chunks(self.data_socket, byteSize)
+        allInfos: str = json.loads(allInfos.decode("utf-8"))
+
+        infoDic: dict[str, Any] = {}
+        keys: List[str] = allInfos["keys"]
+        names: List[str] = allInfos["names"]
+        values: List[str] = allInfos["values"]
+
+        for key, name, value in zip(keys, names, values):
+            infoDic[key] = {'name: ' + name + ' type: ' + value}
+
+        self.data_socket.send('AKN'.encode('utf-8'))
+        self.control_socket.recv(50)
+
+        return infoDic
 
     def move_object(self, object_id: str, pose) -> None:
         return super().move_object(object_id, pose)
