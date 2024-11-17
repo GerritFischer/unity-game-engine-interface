@@ -7,7 +7,7 @@ import numpy as np
 # framework imports
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 # typing imports
-from typing import Any, TypedDict
+from typing import Any, TypedDict, List
 from numpy.typing import NDArray
 
 
@@ -187,25 +187,31 @@ class UnitySimulator(Simulator):
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
         return super().get_illumination(light_source)
-    
 
-    def get_objects(self, test:str) -> dict[str, Any]:
-        
-        send_str: str = json.dumps({'command': 'get_objects', "param" :[test]})
+    def get_objects(self) -> dict[str, Any]:
+
+        send_str: str = json.dumps({'command': 'get_objects', "param": []})
         self.control_socket.send(send_str.encode('utf-8'))
-        
-        byteLenght = self.data_socket.recv(50) 
+
+        byteLenght = self.data_socket.recv(50)
         self.data_socket.send('AKN'.encode('utf-8'))
         byteSize = int(byteLenght[:-16].decode("utf-8"))
-        
+
         allInfos: bytes = self.receive_in_chunks(self.data_socket, byteSize)
-        allInfos: str = allInfos.decode("utf-8")
-        infoDic: dict[str, Any] = json.loads(allInfos)
+        allInfos: str = json.loads(allInfos.decode("utf-8"))
+
+        infoDic: dict[str, Any] = {}
+        keys: List[str] = allInfos["keys"]
+        names: List[str] = allInfos["names"]
+        values: List[str] = allInfos["values"]
+
+        for key, name, value in zip(keys, names, values):
+            infoDic[key] = {'name: ' + name + ' type: ' + value}
+
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
-        
-        return infoDic
 
+        return infoDic
 
     def move_object(self, object_id: str, pose) -> None:
         return super().move_object(object_id, pose)

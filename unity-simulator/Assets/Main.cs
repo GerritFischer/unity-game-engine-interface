@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Linq;
 using System.IO;
 using System.Globalization;
-using Newtonsoft.Json;
 
 public class Main
 {
@@ -371,24 +370,30 @@ public class Main
         /// <param name="param"> The array of parameters </param>
         //---------------------------------------------------------------------
         GameObject[] all_Objects = null;
-        Dictionary<string, Dictionary<string, object>> all_info = new Dictionary<string, Dictionary<string, object>>();
+        ObjectInfo objectInfo = new ObjectInfo();
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
         RunOnMainThread(() =>  {    //FindObjectsOfType and getter for Game Object can only run on main Thread
         
             all_Objects = GameObject.FindObjectsOfType<GameObject>();
+            List<string> keyList = new List<string>();
+            List<string> nameList = new List<string>();
+            List<string> valueList = new List<string>();
 
             foreach(GameObject go in all_Objects){
-
-                var current_object_info = new Dictionary<string, object>{{"name",go.name}, {"type", go.GetType()} };
-                all_info.Add(go.GetInstanceID().ToString(), current_object_info);
-
+                keyList.Add(go.GetInstanceID().ToString());
+                nameList.Add(go.name);
+                valueList.Add(go.GetType().ToString());
             }
+
+            objectInfo.keys = keyList.ToArray();
+            objectInfo.names = nameList.ToArray();
+            objectInfo.values = valueList.ToArray();
             mainFin.Set();    
         });
 
         mainFin.Wait();
         //main thread is finished now turning it into bytes
-        string all_info_string = JsonConvert.SerializeObject(all_info);
+        string all_info_string = JsonUtility.ToJson(objectInfo);
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(all_info_string);
 
 
@@ -431,4 +436,20 @@ public class ImageInfo
     public int height;
     public int channels;
     public string format;
+}
+
+[System.Serializable]
+
+public class ObjectInfo
+{
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Class for storing object info
+    /// </summary>
+    //---------------------------------------------------------------------
+    public string[] keys;
+    public string[] names;
+    public string[] values;
+    
+
 }
