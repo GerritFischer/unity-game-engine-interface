@@ -366,14 +366,14 @@ public class Main
      private static void get_objects(string[] param){
         //---------------------------------------------------------------------
         /// <summary>
-        /// gets all the Game Objects in the current unity scene and sends them back
+        /// gets all the Game Objects in the current unity scene and sends them back in a Dictionary
         /// </summary>
         /// <param name="param"> The array of parameters </param>
         //---------------------------------------------------------------------
         GameObject[] all_Objects = null;
         Dictionary<int, Dictionary<string, object>> all_info = new Dictionary<int, Dictionary<string, object>>();
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
-        RunOnMainThread(() =>  {    //FindObjectsOfType can only run on main Thread
+        RunOnMainThread(() =>  {    //FindObjectsOfType and getter for Game Object can only run on main Thread
            
             all_Objects = GameObject.FindObjectsOfType<GameObject>();
         
@@ -383,8 +383,7 @@ public class Main
                 all_info.Add(go.GetInstanceID(), current_object_info);
 
             }
-            mainFin.Set();
-            
+            mainFin.Set();    
         });
 
         mainFin.Wait();
@@ -393,8 +392,7 @@ public class Main
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(all_info_string);
 
 
-        string bytesize = all_info_bytes.Length.ToString();  
-        Debug.Log(bytesize);    
+        string bytesize = all_info_bytes.Length.ToString();    
         byte[] all_info_bytes_length = Encoding.UTF8.GetBytes(bytesize);
                 
         send_data(dataStream,all_info_bytes_length);
@@ -404,8 +402,7 @@ public class Main
         while(!data_akn_recieved){};
         data_akn_recieved = false;
         dataStream.Write(aknBytes, 0, aknBytes.Length);
-
-        Debug.Log("all data send");     
+   
         
     }
 
