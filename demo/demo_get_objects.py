@@ -10,8 +10,11 @@ def single_run() -> None:
     '''
     # init simulator
     simulator = UnitySimulator(scene_name='debug_1', running=True)
-    test = simulator.get_objects()
-    print(test)
+    print(simulator.get_objects())
+    print(simulator.get_objects())
+    print(simulator.get_objects())
+    print(simulator.get_objects())
+    print(simulator.get_objects())
     
     
     
