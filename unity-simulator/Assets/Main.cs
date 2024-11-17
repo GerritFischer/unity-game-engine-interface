@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Linq;
 using System.IO;
 using System.Globalization;
+using Newtonsoft.Json;
 
 public class Main
 {
@@ -26,7 +27,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info"};
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -360,6 +361,52 @@ public class Main
             loadedBundles.Add(bundle);
         }
 
+    }
+
+     private static void get_objects(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// gets all the Game Objects in the current unity scene and sends them back
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        GameObject[] all_Objects = null;
+        Dictionary<int, Dictionary<string, object>> all_info = new Dictionary<int, Dictionary<string, object>>();
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
+        RunOnMainThread(() =>  {    //FindObjectsOfType can only run on main Thread
+           
+            all_Objects = GameObject.FindObjectsOfType<GameObject>();
+        
+            foreach(GameObject go in all_Objects){
+
+                var current_object_info = new Dictionary<string, object>{{"name",go.name}, {"type", go.GetType()} };
+                all_info.Add(go.GetInstanceID(), current_object_info);
+
+            }
+            mainFin.Set();
+            
+        });
+
+        mainFin.Wait();
+        //main thread is finished now turning it into bytes
+        string all_info_string = JsonConvert.SerializeObject(all_info);
+        byte[] all_info_bytes = Encoding.UTF8.GetBytes(all_info_string);
+
+
+        string bytesize = all_info_bytes.Length.ToString();  
+        Debug.Log(bytesize);    
+        byte[] all_info_bytes_length = Encoding.UTF8.GetBytes(bytesize);
+                
+        send_data(dataStream,all_info_bytes_length);
+        send_data(dataStream, all_info_bytes);
+
+        //aknowledgement for sending both
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
+        dataStream.Write(aknBytes, 0, aknBytes.Length);
+
+        Debug.Log("all data send");     
+        
     }
 
 }
