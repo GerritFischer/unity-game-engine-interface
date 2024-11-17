@@ -363,7 +363,7 @@ public class Main
 
     }
 
-     private static void get_objects(string[] param){
+    private static void get_objects(string[] param){
         //---------------------------------------------------------------------
         /// <summary>
         /// gets all the Game Objects in the current unity scene and sends them back in a Dictionary
@@ -374,9 +374,9 @@ public class Main
         Dictionary<string, Dictionary<string, object>> all_info = new Dictionary<string, Dictionary<string, object>>();
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
         RunOnMainThread(() =>  {    //FindObjectsOfType and getter for Game Object can only run on main Thread
-           
-            all_Objects = GameObject.FindObjectsOfType<GameObject>();
         
+            all_Objects = GameObject.FindObjectsOfType<GameObject>();
+
             foreach(GameObject go in all_Objects){
 
                 var current_object_info = new Dictionary<string, object>{{"name",go.name}, {"type", go.GetType()} };
