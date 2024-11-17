@@ -195,13 +195,14 @@ class UnitySimulator(Simulator):
         self.control_socket.send(send_str.encode('utf-8'))
         
         byteLenght = self.data_socket.recv(50) 
+        self.data_socket.send('AKN'.encode('utf-8'))
         byteSize = int(byteLenght[:-16].decode("utf-8"))
         
         allInfos: bytes = self.receive_in_chunks(self.data_socket, byteSize)
         allInfos: str = allInfos.decode("utf-8")
         infoDic: dict[str, Any] = json.loads(allInfos)
         self.data_socket.send('AKN'.encode('utf-8'))
-        self.data_socket.recv(50)
+        self.control_socket.recv(50)
         
         return infoDic
 

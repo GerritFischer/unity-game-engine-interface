@@ -371,7 +371,7 @@ public class Main
         /// <param name="param"> The array of parameters </param>
         //---------------------------------------------------------------------
         GameObject[] all_Objects = null;
-        Dictionary<int, Dictionary<string, object>> all_info = new Dictionary<int, Dictionary<string, object>>();
+        Dictionary<string, Dictionary<string, object>> all_info = new Dictionary<string, Dictionary<string, object>>();
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
         RunOnMainThread(() =>  {    //FindObjectsOfType and getter for Game Object can only run on main Thread
            
@@ -380,7 +380,7 @@ public class Main
             foreach(GameObject go in all_Objects){
 
                 var current_object_info = new Dictionary<string, object>{{"name",go.name}, {"type", go.GetType()} };
-                all_info.Add(go.GetInstanceID(), current_object_info);
+                all_info.Add(go.GetInstanceID().ToString(), current_object_info);
 
             }
             mainFin.Set();    
@@ -396,13 +396,13 @@ public class Main
         byte[] all_info_bytes_length = Encoding.UTF8.GetBytes(bytesize);
                 
         send_data(dataStream,all_info_bytes_length);
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
         send_data(dataStream, all_info_bytes);
-
         //aknowledgement for sending both
         while(!data_akn_recieved){};
         data_akn_recieved = false;
-        dataStream.Write(aknBytes, 0, aknBytes.Length);
-   
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
         
     }
 
