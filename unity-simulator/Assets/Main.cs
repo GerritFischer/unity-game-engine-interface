@@ -26,7 +26,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects"};
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects", "move_object"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -218,6 +218,18 @@ public class Main
         });
            
     }
+public void move_object(string id, float pos_x, float pos_y, float pos_z, float rot_x, float rot_y, float rot_z){
+    RunOnMainThread(() => {
+        GameObject current_object = GameObject.Find("/" + id);
+        if (current_object != null) {
+                current_object.transform.localPosition = new Vector3(pos_x,pos_y,pos_z);
+                current_object.transform.localRotation *= Quaternion.Euler(rot_x, rot_y, rot_z) ;
+        }
+        else {
+            Debug.Log("Object does not exist");
+        }
+    });
+}
 
     static void step_simulation_without_physics(string[] param){
         //---------------------------------------------------------------------

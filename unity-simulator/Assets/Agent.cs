@@ -59,7 +59,7 @@ public class Agent : MonoBehaviour
         camObjects[1].transform.forward = Vector3.right;
         camObjects[2].transform.forward = Vector3.back;
         camObjects[3].transform.forward = Vector3.left;
-        //move(1f,1f,90.0f);
+        move(1f,1f,90.0f);
     }
 
     public void move(float x ,float z, float yaw){
@@ -74,11 +74,7 @@ public class Agent : MonoBehaviour
 
         //set new steps and rotation for agent
         gameObject.transform.position = new Vector3(x,0,z);
-        gameObject.transform.localRotation = Quaternion.Euler(0, 90, 0);
-    }
-
-    public void move_object(string id, float pos_x, float pos_y, float pos_z, float rot_x, float rot_y, float rot_z){
-
+        gameObject.transform.localRotation *= Quaternion.Euler(0, 90, 0);
     }
 
     public int[] get_image_info(){
