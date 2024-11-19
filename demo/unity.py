@@ -186,6 +186,11 @@ class UnitySimulator(Simulator):
 
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
+        send_str: str = json.dumps({'command': 'get_illumination', "param": [light_source]})
+        self.control_socket.send(send_str.encode('utf-8'))
+        allInfos: bytes = self.receive_in_chunks(self.data_socket, 100)
+        allInfos: str = json.loads(allInfos.decode("utf-8"))
+        print(allInfos)
         return super().get_illumination(light_source)
 
     def get_objects(self) -> dict[str, Any]:
