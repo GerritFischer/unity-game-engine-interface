@@ -59,7 +59,7 @@ public class Agent : MonoBehaviour
         camObjects[1].transform.forward = Vector3.right;
         camObjects[2].transform.forward = Vector3.back;
         camObjects[3].transform.forward = Vector3.left;
-        move(1f,1f,90.0f);
+        //move(1f,1f,90.0f);
     }
 
     public void move(float x ,float z, float yaw){

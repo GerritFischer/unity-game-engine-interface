@@ -218,18 +218,25 @@ public class Main
         });
            
     }
-public void move_object(string id, float pos_x, float pos_y, float pos_z, float rot_x, float rot_y, float rot_z){
-    RunOnMainThread(() => {
-        GameObject current_object = GameObject.Find("/" + id);
-        if (current_object != null) {
-                current_object.transform.localPosition = new Vector3(pos_x,pos_y,pos_z);
-                current_object.transform.localRotation *= Quaternion.Euler(rot_x, rot_y, rot_z) ;
-        }
-        else {
-            Debug.Log("Object does not exist");
-        }
-    });
-}
+    static void move_object(string[] param){
+        float pos_x=float.Parse(param[1],CultureInfo.InvariantCulture);
+        float pos_y=float.Parse(param[2],CultureInfo.InvariantCulture);
+        float pos_z=float.Parse(param[3],CultureInfo.InvariantCulture);
+        float rot_x=float.Parse(param[4],CultureInfo.InvariantCulture);
+        float rot_y=float.Parse(param[5],CultureInfo.InvariantCulture);
+        float rot_z=float.Parse(param[6],CultureInfo.InvariantCulture);
+        RunOnMainThread(() => {
+            GameObject current_object = GameObject.Find("/" + param[0]);
+            if (current_object != null) {
+                    current_object.transform.localPosition = new Vector3(pos_x,pos_y,pos_z);
+                    current_object.transform.localRotation *= Quaternion.Euler(rot_x, rot_y, rot_z);
+            }
+            else {
+                Debug.Log("Object does not exist");
+            }
+        });
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+    }
 
     static void step_simulation_without_physics(string[] param){
         //---------------------------------------------------------------------
