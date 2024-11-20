@@ -17,7 +17,7 @@ def single_run() -> None:
     In this case it is used for debugging and testing
     '''
     # init simulator
-    simulator = UnitySimulator(scene_name='debug_1', running=True)
+    simulator = UnitySimulator(scene_name='debug_scene', running=True)
     print(simulator.echo("Test"))
 
     '''
@@ -69,7 +69,8 @@ def single_run() -> None:
             painter.drawImage(0, 0, self.qimage)
 
         def update_qimage(self):
-            arr = simulator.move_agent(0, 0, 0.01)
+            arr = simulator.move_agent(0, 0, 1)
+            simulator.move_object("test_0",(-3,0,0,1,1,1))
             # generate qimage
             self.qimage = QImage(arr.data, arr.shape[1], arr.shape[0], arr.shape[1] * 3, QImage.Format.Format_RGB888)
             # trigger a repaint

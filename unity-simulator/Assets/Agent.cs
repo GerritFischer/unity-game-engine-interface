@@ -69,12 +69,12 @@ public class Agent : MonoBehaviour
         /// </summary>
         /// <param name="x"=Coordinate of the x-axis to teleport to</param>
         /// <param name="z"=Coordinate of the z-axis to teleport to</param>
-        /// <param name="yaw"=Rotation of the agent in (TODO: TOMMY!! rad or degree)</param>
+        /// <param name="yaw"=Rotation of the agent in degree</param>
         //---------------------------------------------------------------------
 
         //set new steps and rotation for agent
         gameObject.transform.position = new Vector3(x,0,z);
-        gameObject.transform.localRotation *= Quaternion.Euler(0, 90, 0);
+        gameObject.transform.localRotation *= Quaternion.Euler(0, yaw, 0);
     }
 
     public int[] get_image_info(){

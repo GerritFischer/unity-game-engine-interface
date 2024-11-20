@@ -218,18 +218,28 @@ public class Main
         });
            
     }
-    static void move_object(string[] param){
+    static void move_object(string[] param){//---------------------------------------------------------------------
+        /// <summary>
+        /// Changes the scene to the scene with the name given in param[0]
+        /// </summary>
+        /// <param name="param">array contains id and rotation and position</param>
+        //---------------------------------------------------------------------
+
+        //converts sended string to float
         float pos_x=float.Parse(param[1],CultureInfo.InvariantCulture);
         float pos_y=float.Parse(param[2],CultureInfo.InvariantCulture);
         float pos_z=float.Parse(param[3],CultureInfo.InvariantCulture);
         float rot_x=float.Parse(param[4],CultureInfo.InvariantCulture);
         float rot_y=float.Parse(param[5],CultureInfo.InvariantCulture);
         float rot_z=float.Parse(param[6],CultureInfo.InvariantCulture);
+
         RunOnMainThread(() => {
+            //search for id
             GameObject current_object = GameObject.Find("/" + param[0]);
             if (current_object != null) {
-                    current_object.transform.localPosition = new Vector3(pos_x,pos_y,pos_z);
-                    current_object.transform.localRotation *= Quaternion.Euler(rot_x, rot_y, rot_z);
+                //transform the position and rotation
+                current_object.transform.localPosition = new Vector3(pos_x,pos_y,pos_z);
+                current_object.transform.localRotation *= Quaternion.Euler(rot_x, rot_y, rot_z);
             }
             else {
                 Debug.Log("Object does not exist");
