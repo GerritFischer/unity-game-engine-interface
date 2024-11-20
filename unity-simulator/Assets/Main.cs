@@ -26,7 +26,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects"};
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects","get_illumination"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -362,6 +362,39 @@ public class Main
 
     }
 
+    private static void get_illumination(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// retrievees the color of a specified light source
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        float[] color = null;
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
+        RunOnMainThread(() =>  {   
+            // access to Game Objects and their data can only be on main Thread
+            GameObject lightGameObject = GameObject.Find(param[0]);
+            if (lightGameObject.GetComponent<Light>() != null){
+                Light light = lightGameObject.GetComponent<Light>();
+                color = new float[] {light.color.r, light.color.g, light.color.b};
+            }
+            else{
+                Debug.Log("Object has no Light source");
+            }
+            mainFin.Set();
+        });
+
+        mainFin.Wait();
+        IllumiInfo illumiInfo = new IllumiInfo();
+        illumiInfo.colors = color;
+        string illumiInfoString = JsonUtility.ToJson(illumiInfo);
+        byte[] all_info_bytes = Encoding.UTF8.GetBytes(illumiInfoString);
+        send_data(dataStream,all_info_bytes);
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+    }
+
     private static void get_objects(string[] param){
         //---------------------------------------------------------------------
         /// <summary>
@@ -452,4 +485,15 @@ public class ObjectInfo
     public string[] values;
     
 
+}
+
+[System.Serializable]
+public class IllumiInfo
+{
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Class for storing color info of light
+    /// </summary>
+    //---------------------------------------------------------------------
+    public float[] colors;
 }
