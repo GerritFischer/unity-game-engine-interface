@@ -369,26 +369,30 @@ public class Main
         /// </summary>
         /// <param name="param"> The array of parameters </param>
         //---------------------------------------------------------------------
-        Light light = null;
-        string para = param[0];
-        GameObject lightGameObject = null;
         float[] color = null;
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
-        RunOnMainThread(() =>  {                    //Find for Game Object can only run on main Thread
-            lightGameObject = GameObject.Find(para);
-            light = lightGameObject.GetComponent<Light>();
-            color = new float[] {light.color.r, light.color.g, light.color.b};
+        RunOnMainThread(() =>  {   
+            // access to Game Objects and their data can only be on main Thread
+            GameObject lightGameObject = GameObject.Find(param[0]);
+            if (lightGameObject.GetComponent<Light>() != null){
+                Light light = lightGameObject.GetComponent<Light>();
+                color = new float[] {light.color.r, light.color.g, light.color.b};
+            }
+            else{
+                Debug.Log("Object has no Light source");
+            }
             mainFin.Set();
         });
-        Debug.Log("testetssetstste");
+
         mainFin.Wait();
         IllumiInfo illumiInfo = new IllumiInfo();
-        Debug.Log(color);
         illumiInfo.colors = color;
         string illumiInfoString = JsonUtility.ToJson(illumiInfo);
-        Debug.Log(illumiInfoString);
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(illumiInfoString);
         send_data(dataStream,all_info_bytes);
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
     private static void get_objects(string[] param){

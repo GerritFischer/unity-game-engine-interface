@@ -186,15 +186,42 @@ class UnitySimulator(Simulator):
 
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray:
+        '''
+        This function retrieves color values of a light source
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        colors :            A Array containing the color values in RGB of the parameter object
+        '''
         send_str: str = json.dumps({'command': 'get_illumination', "param": [light_source]})
         self.control_socket.send(send_str.encode('utf-8'))
-        allInfos: bytes = self.receive_in_chunks(self.data_socket, 100)
-        allInfos: str = json.loads(allInfos.decode("utf-8"))
-        print(allInfos)
-        return super().get_illumination(light_source)
+
+        allInfos: bytes = self.receive_in_chunks(self.data_socket, 1024)
+        allInfosStr: str = json.loads(allInfos.decode("utf-8"))
+        colors: List[float] = allInfosStr["colors"]
+        finalColors: NDArray = (np.array(colors) * 255 + 0.1).astype(int)
+
+        self.data_socket.send('AKN'.encode('utf-8'))
+        self.control_socket.recv(50)
+
+        return finalColors
 
     def get_objects(self) -> dict[str, Any]:
+        '''
+        This function retrieves object information from the current unity scene 
 
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        infoDic :            A dictionary containing information about all the objects in the current Unity scene
+        '''
         send_str: str = json.dumps({'command': 'get_objects', "param": []})
         self.control_socket.send(send_str.encode('utf-8'))
 
