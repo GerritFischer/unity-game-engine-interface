@@ -245,8 +245,25 @@ class UnitySimulator(Simulator):
 
         return infoDic
 
-    def move_object(self, object_id: str, pose) -> None:
-        return super().move_object(object_id, pose)
+    def move_object(self, object_id: str, pose: Pose) -> None:
+        '''
+        This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
+
+        Parameters
+        ----------
+        object_id :                         The id of the moved object
+        pose :                              The tuple contains the new position and rotation
+
+        Returns
+        ----------
+        None
+        '''
+
+        #invokes move_object 
+        send_str: str = json.dumps({'command': 'move_object', "param": [object_id, pose[0], pose[1],
+                                                                        pose[2], pose[3], pose[4], pose[5]]})
+        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.recv(50)
 
     def set_illumination(self, light_source: str, color: NDArray) -> None:
         return super().set_illumination(light_source, color)

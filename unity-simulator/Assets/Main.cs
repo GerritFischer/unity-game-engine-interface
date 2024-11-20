@@ -26,7 +26,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects","get_illumination"};
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects", "move_object","get_illumination"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -217,6 +217,35 @@ public class Main
             controlStream.Write(aknBytes, 0, aknBytes.Length);
         });
            
+    }
+    static void move_object(string[] param){//---------------------------------------------------------------------
+        /// <summary>
+        /// Changes the scene to the scene with the name given in param[0]
+        /// </summary>
+        /// <param name="param">array contains id and rotation and position</param>
+        //---------------------------------------------------------------------
+
+        //converts sended string to float
+        float pos_x=float.Parse(param[1],CultureInfo.InvariantCulture);
+        float pos_y=float.Parse(param[2],CultureInfo.InvariantCulture);
+        float pos_z=float.Parse(param[3],CultureInfo.InvariantCulture);
+        float rot_x=float.Parse(param[4],CultureInfo.InvariantCulture);
+        float rot_y=float.Parse(param[5],CultureInfo.InvariantCulture);
+        float rot_z=float.Parse(param[6],CultureInfo.InvariantCulture);
+
+        RunOnMainThread(() => {
+            //search for id
+            GameObject current_object = GameObject.Find("/" + param[0]);
+            if (current_object != null) {
+                //transform the position and rotation
+                current_object.transform.localPosition = new Vector3(pos_x,pos_y,pos_z);
+                current_object.transform.localRotation *= Quaternion.Euler(rot_x, rot_y, rot_z);
+            }
+            else {
+                Debug.Log("Object does not exist");
+            }
+        });
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
     static void step_simulation_without_physics(string[] param){

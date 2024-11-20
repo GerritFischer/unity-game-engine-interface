@@ -25,7 +25,7 @@ public class Agent : MonoBehaviour
         // set game object layer to last layer so we can remove 
         // the agent from the camera feed
         gameObject.layer = 31;
-        gameObject.transform.position = new Vector3(0,0,0);
+        gameObject.transform.localPosition = new Vector3(0,0,0);
 
         GameObject camObject_n = new GameObject("camera_n");
         GameObject camObject_e = new GameObject("camera_e");
@@ -43,7 +43,8 @@ public class Agent : MonoBehaviour
         for (int i = 0; i<4; i++){
             //becomes child of agent
             camObjects[i].transform.parent = this.transform;
-            camObjects[i].transform.position = gameObject.transform.position;
+            //place at the center of parent
+            camObjects[i].transform.localPosition = new Vector3(0,0,0);
             cams[i] = camObjects[i].AddComponent<Camera>();
             cams[i].enabled = false;
             //layer 32 becomes hidden
@@ -58,7 +59,7 @@ public class Agent : MonoBehaviour
         camObjects[1].transform.forward = Vector3.right;
         camObjects[2].transform.forward = Vector3.back;
         camObjects[3].transform.forward = Vector3.left;
-        //move(1f,1f,(float) (Math.PI/2));
+        //move(1f,1f,90.0f);
     }
 
     public void move(float x ,float z, float yaw){
@@ -68,17 +69,12 @@ public class Agent : MonoBehaviour
         /// </summary>
         /// <param name="x"=Coordinate of the x-axis to teleport to</param>
         /// <param name="z"=Coordinate of the z-axis to teleport to</param>
-        /// <param name="yaw"=Rotation of the agent in (TODO: TOMMY!! rad or degree)</param>
+        /// <param name="yaw"=Rotation of the agent in degree</param>
         //---------------------------------------------------------------------
 
         //set new steps and rotation for agent
         gameObject.transform.position = new Vector3(x,0,z);
-        gameObject.transform.Rotate(0.0f, (float)(yaw * 360 / (Mathf.PI * 2)), 0.0f, Space.Self);
-        //set new steps and rotation for cameras
-        foreach(GameObject camObject in camObjects){
-            camObject.transform.position = gameObject.transform.position;
-            camObject.transform.Rotate(0.0f, (float)(yaw * 360 / (Mathf.PI * 2)), 0.0f, Space.Self);
-        }
+        gameObject.transform.localRotation *= Quaternion.Euler(0, yaw, 0);
     }
 
     public int[] get_image_info(){
