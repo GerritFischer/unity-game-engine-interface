@@ -266,7 +266,10 @@ class UnitySimulator(Simulator):
         self.control_socket.recv(50)
 
     def set_illumination(self, light_source: str, color: NDArray) -> None:
-        return super().set_illumination(light_source, color)
+        arr = color.tolist()
+        send_str: str = json.dumps({'command': 'set_illumination', "param": [light_source, arr[0], arr[1], arr[2]]})
+        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.recv(50)
 
     def stop(self) -> None:
         return super().stop()

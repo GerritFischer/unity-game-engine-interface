@@ -26,7 +26,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects", "move_object","get_illumination"};
+    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects", "move_object","get_illumination", "set_illumination"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -421,6 +421,32 @@ public class Main
         send_data(dataStream,all_info_bytes);
         while(!data_akn_recieved){};
         data_akn_recieved = false;
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+    }
+
+    private static void set_illumination(string[] param){
+        int[] rgbVal  = {int.Parse(param[1]), int.Parse(param[2]), int.Parse(param[3])};
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
+        Debug.Log("werte sind" + param[1] + "  "+ param[2]+ "  "+ param[3]);
+	    float[] rgbnew = new float[3];
+	    for(int i = 0; i< rgbVal.Length; i++){
+		    rgbnew[i] = rgbVal[i] /255f;
+		    }
+        Debug.Log("werte sind " +rgbnew[0] + rgbnew[1] + rgbnew[2]);
+        RunOnMainThread(() =>  {   
+            //access to Game Objects and their data can only be on main Thread
+            GameObject lightGameObject = GameObject.Find(param[0]);
+
+		    if(lightGameObject.GetComponent<Light>() != null){
+            Light light = lightGameObject.GetComponent<Light>();
+		    light.color = new Color (rgbnew[0], rgbnew[1], rgbnew[2]); 
+            }
+            else{
+                Debug.Log("Object has no Light source");
+            }
+            mainFin.Set(); 
+        });
+        mainFin.Wait();
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
