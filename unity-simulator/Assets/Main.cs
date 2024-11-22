@@ -472,6 +472,13 @@ public class Main
         controlStream.Write(aknBytes, 0, aknBytes.Length);
         
     }
+    private static get_position(string[] param){
+        float [] pose = [NaN,NaN,NaN,NaN,NaN,NaN];
+        GameObject current_object = GameObject.Find("/" + id);
+        if (current_object != null){
+            curr
+        }
+    }
 
 }
 
