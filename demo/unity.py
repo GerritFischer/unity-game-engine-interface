@@ -9,6 +9,7 @@ from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 # typing imports
 from typing import Any, TypedDict, List
 from numpy.typing import NDArray
+import math
 
 
 class UnitySimulator(Simulator):
@@ -267,6 +268,22 @@ class UnitySimulator(Simulator):
 
     def set_illumination(self, light_source: str, color: NDArray) -> None:
         return super().set_illumination(light_source, color)
+    
+    def get_pose(self, object_id:str)->Pose|None:
+        send_str: str = json.dumps({'command': 'get_position', "param": [object_id]})
+        self.control_socket.send(send_str.encode('utf-8'))
+
+        allInfos: bytes = self.receive_in_chunks(self.data_socket, 1024)
+        allInfosStr: str = json.loads(allInfos.decode("utf-8"))
+
+        pose:Pose =tuple(allInfosStr["poses"])
+        self.data_socket.send('AKN'.encode('utf-8'))
+        self.control_socket.recv(50)
+
+        if math.isnan(pose[0]):
+            return None
+
+        return pose
 
     def stop(self) -> None:
         return super().stop()
