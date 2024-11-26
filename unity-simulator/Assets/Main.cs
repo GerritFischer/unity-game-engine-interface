@@ -26,7 +26,16 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects", "move_object","get_illumination","get_position"};
+    private static string[] commands={"echo", 
+                                      "change_scene",
+                                      "step_simulation_without_physics",
+                                      "get_image",
+                                      "get_image_info",
+                                      "get_objects",
+                                      "move_object",
+                                      "get_illumination",
+                                      "stop",
+                                      "get_position"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -297,7 +306,7 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        int[,] image = new int[1,1];
+        byte[,] image = new byte[1,1];
         RunOnMainThread(() => {
             image = agent.get_image();
         });
@@ -306,7 +315,7 @@ public class Main
         int rows = image.GetLength(0);
         int cols = image.GetLength(1);
         int elements = rows * cols;
-        // elements * 4 because each int takes up 4 bytes
+
         byte[] byteArray = new byte[elements];
         for (int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
@@ -489,6 +498,7 @@ public class Main
         /// <param name="param"> The array of parameters </param>
         //---------------------------------------------------------------------
 
+<<<<<<< unity-simulator/Assets/Main.cs
 
         //init pose
         float[] coor = new float[] {float.NaN,float.NaN,float.NaN,float.NaN,float.NaN,float.NaN};
@@ -524,6 +534,22 @@ public class Main
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
+=======
+    private static void stop(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// This function will stop the unity simulator. It will not send 
+        /// back an acknowledgement.
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        RunOnMainThread(() => {
+            Application.Quit();
+        });
+        
+    }
+
+>>>>>>> unity-simulator/Assets/Main.cs
 }
 
 [System.Serializable]
