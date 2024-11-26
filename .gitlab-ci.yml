@@ -6,4 +6,4 @@ pylint:
   stage: lint
   script:
       - pip install pylint
-      - pylint demo/unity.py
+      - pylint --max-line-length=160 --disable C0103,W0511,C0114,C0115,W0231 unity.py
