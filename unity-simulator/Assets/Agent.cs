@@ -112,6 +112,7 @@ public class Agent : MonoBehaviour
                     images[i, y*IMAGE_WIDTH+x, 2] = Mathf.RoundToInt(c.b * 255);
                 }
             }
+            Destroy(imageRaw);
         }  
         // convert into one image
         int[,] finalImage = new int[FINAL_WIDTH * IMAGE_HEIGHT, 3];
