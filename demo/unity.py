@@ -7,7 +7,7 @@ import numpy as np
 # framework imports
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 # typing imports
-from typing import Any, TypedDict, List
+from typing import Any, List
 from numpy.typing import NDArray
 
 
@@ -110,7 +110,7 @@ class UnitySimulator(Simulator):
 
         return recieved_echo
 
-    def change_scene(self, scene_name: str) -> None:
+    def change_scene(self, scene: str) -> None:
         '''
         This function sends the path to a scene to the simulator
         and the command to change to this scene.
@@ -124,7 +124,7 @@ class UnitySimulator(Simulator):
         None
         '''
         # convert scene path into formatted json command and send it
-        send_str: str = json.dumps({'command': 'change_scene', 'param': [scene_name]})
+        send_str: str = json.dumps({'command': 'change_scene', 'param': [scene]})
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 
