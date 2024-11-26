@@ -165,7 +165,7 @@ class UnitySimulator(Simulator):
         image_data :                        The image observation received from the simulation.
         '''
         # send the actuation command to the virtual agent
-        send_str = json.dumps({'command': 'step_simulation_without_physics', 'param': [x, y, yaw]})
+        send_str: str = json.dumps({'command': 'step_simulation_without_physics', 'param': [x, y, yaw]})
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 
@@ -212,7 +212,7 @@ class UnitySimulator(Simulator):
 
     def get_objects(self) -> dict[str, Any]:
         '''
-        This function retrieves object information from the current unity scene 
+        This function retrieves object information from the current unity scene
 
         Parameters
         ----------
@@ -259,14 +259,26 @@ class UnitySimulator(Simulator):
         None
         '''
 
-        #invokes move_object 
+        # invokes move_object
         send_str: str = json.dumps({'command': 'move_object', "param": [object_id, pose[0], pose[1],
                                                                         pose[2], pose[3], pose[4], pose[5]]})
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 
+    def stop(self) -> None:
+        '''
+        This function stops the unity simulator. It does not expect a AKN from the simulator.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        infoDic :            A dictionary containing information about all the objects in the current Unity scene
+        '''
+        send_str: str = json.dumps({'command': 'stop', "param": []})
+        self.control_socket.send(send_str.encode('utf-8'))
+
     def set_illumination(self, light_source: str, color: NDArray) -> None:
         return super().set_illumination(light_source, color)
-
-    def stop(self) -> None:
-        return super().stop()

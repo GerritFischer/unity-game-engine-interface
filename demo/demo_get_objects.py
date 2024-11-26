@@ -15,6 +15,7 @@ def single_run() -> None:
     print(simulator.get_objects())
     print(simulator.get_objects())
     print(simulator.get_objects())
+    simulator.stop()
     
     
     
