@@ -288,7 +288,7 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        int[,] image = new int[1,1];
+        byte[,] image = new byte[1,1];
         RunOnMainThread(() => {
             image = agent.get_image();
         });
@@ -297,7 +297,7 @@ public class Main
         int rows = image.GetLength(0);
         int cols = image.GetLength(1);
         int elements = rows * cols;
-        // elements * 4 because each int takes up 4 bytes
+
         byte[] byteArray = new byte[elements];
         for (int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
