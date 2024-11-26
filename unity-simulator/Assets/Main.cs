@@ -26,7 +26,15 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-    private static string[] commands={"echo", "change_scene", "step_simulation_without_physics", "get_image", "get_image_info","get_objects", "move_object","get_illumination"};
+    private static string[] commands={"echo", 
+                                      "change_scene",
+                                      "step_simulation_without_physics",
+                                      "get_image",
+                                      "get_image_info",
+                                      "get_objects",
+                                      "move_object",
+                                      "get_illumination",
+                                      "stop"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -470,6 +478,20 @@ public class Main
         while(!data_akn_recieved){};
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
+        
+    }
+
+    private static void stop(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// This function will stop the unity simulator. It will not send 
+        /// back an acknowledgement.
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        RunOnMainThread(() => {
+            Application.Quit();
+        });
         
     }
 

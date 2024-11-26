@@ -265,8 +265,21 @@ class UnitySimulator(Simulator):
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 
+    def stop(self) -> None:
+        '''
+        This function stops the unity simulator. It does not expect a AKN from the simulator. 
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        infoDic :            A dictionary containing information about all the objects in the current Unity scene
+        '''
+        send_str: str = json.dumps({'command': 'stop', "param": []})
+        self.control_socket.send(send_str.encode('utf-8'))
+
     def set_illumination(self, light_source: str, color: NDArray) -> None:
         return super().set_illumination(light_source, color)
 
-    def stop(self) -> None:
-        return super().stop()
