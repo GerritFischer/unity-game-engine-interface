@@ -17,14 +17,13 @@ def single_run() -> None:
     k = simulator.get_illumination("Directional Light")
     print("this is")
     print(k)
-    print(type(k))
+    print(k[1])
     simulator.set_illumination("test_0", arr)
     simulator.set_illumination("Directional Light", arr2)
     print("stop")
-    d = simulator.get_illumination("Directional Light")
+    d = simulator.get_illumination("test_0")
     print("this is")
     print(d)
-    print(type(d))
     
     
     
