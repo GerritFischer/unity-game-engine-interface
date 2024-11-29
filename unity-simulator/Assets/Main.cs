@@ -36,8 +36,8 @@ public class Main
                                       "move_object",
                                       "set_illumination"
                                       "get_illumination",
-                                      "stop"};
-
+                                      "stop",
+                                      "get_position"};
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
@@ -244,6 +244,9 @@ public class Main
         float rot_y=float.Parse(param[5],CultureInfo.InvariantCulture);
         float rot_z=float.Parse(param[6],CultureInfo.InvariantCulture);
 
+        //waiting till the main Thread is finished
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false);
+
         RunOnMainThread(() => {
             //search for id
             GameObject current_object = GameObject.Find("/" + param[0]);
@@ -255,7 +258,9 @@ public class Main
             else {
                 Debug.Log("Object does not exist");
             }
+            mainFin.Set();    
         });
+        mainFin.Wait();
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
@@ -269,10 +274,14 @@ public class Main
         float x = float.Parse(param[0],CultureInfo.InvariantCulture);
         float y = float.Parse(param[1],CultureInfo.InvariantCulture);
         float yaw = float.Parse(param[2],CultureInfo.InvariantCulture);
-        RunOnMainThread(() => {
-            agent.move(x, y, yaw);
-        });
 
+        //waiting till the main Thread is finished
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false);
+        RunOnMainThread(() =>  {
+            agent.move(x, y, yaw);
+            mainFin.Set(); 
+        });
+        mainFin.Wait();
         controlStream.Write(aknBytes, 0, aknBytes.Length);    
     }
 
@@ -507,7 +516,47 @@ public class Main
         controlStream.Write(aknBytes, 0, aknBytes.Length);
         
     }
+    private static void get_position(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// get the Id of a object and sends the pose back as array
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        //init pose
+        float[] coor = new float[] {float.NaN,float.NaN,float.NaN,float.NaN,float.NaN,float.NaN};
 
+        //waiting till the main Thread is finished
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false);
+
+        RunOnMainThread(() =>  {
+            GameObject current_object = GameObject.Find("/" + param[0]);
+            if (current_object != null){
+                //get the pose
+                coor[0]=current_object.transform.localPosition.x;
+                coor[1]=current_object.transform.localPosition.z;
+                coor[2]=current_object.transform.localPosition.y;
+
+                //convert Quanterion into EulerAngle
+                Vector3 rotation = current_object.transform.localRotation.eulerAngles; 
+                coor[3] = rotation.x;
+                coor[4] = rotation.y;
+                coor[5] = rotation.z;
+            }
+            mainFin.Set();
+        });
+        mainFin.Wait();
+        //init new class
+        Pose pose = new Pose();
+        pose.poses=coor;
+        //convert to Json
+        string poseInfo = JsonUtility.ToJson(pose);
+        byte[] all_info_bytes = Encoding.UTF8.GetBytes(poseInfo);
+        send_data(dataStream,all_info_bytes);
+        while(!data_akn_recieved){};
+        data_akn_recieved = false;
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+    }
     private static void stop(string[] param){
         //---------------------------------------------------------------------
         /// <summary>
@@ -574,4 +623,14 @@ public class IllumiInfo
     /// </summary>
     //---------------------------------------------------------------------
     public float[] colors;
+}
+[System.Serializable]
+public class Pose
+{
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Class for storing position and rotation
+    /// </summary>
+    //---------------------------------------------------------------------
+    public float[] poses;
 }
