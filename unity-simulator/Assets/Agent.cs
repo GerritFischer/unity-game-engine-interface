@@ -86,17 +86,17 @@ public class Agent : MonoBehaviour
         return new int[2]{FINAL_WIDTH, IMAGE_HEIGHT};
     }
 
-    public int[,] get_image(){
+    public byte[,] get_image(){
         //---------------------------------------------------------------------
         /// <summary>
         /// Retrieves the current images from all 4 cameras and converts them into
-        /// one big image. Returns a 2d int array with the pixels and corresponding
+        /// one big image. Returns a 2d byte array with the pixels and corresponding
         /// RGB values in the range of 0-255.
         /// </summary>
         //---------------------------------------------------------------------
         
         // retrieve single images
-        int[,,] images = new int[4, IMAGE_HEIGHT*FINAL_WIDTH, 3];
+        byte[,,] images = new byte[4, IMAGE_HEIGHT*FINAL_WIDTH, 3];
         for(int i = 0; i < 4; i++){
             RenderTexture.active = cams[i].targetTexture;
             cams[i].Render();
@@ -107,14 +107,15 @@ public class Agent : MonoBehaviour
             for(int x = 0; x < IMAGE_WIDTH; x++){
                 for(int y = 0; y < IMAGE_HEIGHT; y++){
                     Color c = colors[y*IMAGE_WIDTH + x];
-                    images[i, y*IMAGE_WIDTH+x, 0] = Mathf.RoundToInt(c.r * 255);
-                    images[i, y*IMAGE_WIDTH+x, 1] = Mathf.RoundToInt(c.g * 255);
-                    images[i, y*IMAGE_WIDTH+x, 2] = Mathf.RoundToInt(c.b * 255);
+                    images[i, y*IMAGE_WIDTH+x, 0] = (byte)Mathf.RoundToInt(c.r * 255);
+                    images[i, y*IMAGE_WIDTH+x, 1] = (byte)Mathf.RoundToInt(c.g * 255);
+                    images[i, y*IMAGE_WIDTH+x, 2] = (byte)Mathf.RoundToInt(c.b * 255);
                 }
             }
+            Destroy(image_raw);
         }  
         // convert into one image
-        int[,] finalImage = new int[FINAL_WIDTH * IMAGE_HEIGHT, 3];
+        byte[,] finalImage = new byte[FINAL_WIDTH * IMAGE_HEIGHT, 3];
         for(int x = 0; x < FINAL_WIDTH; x++){
             for(int y = 0; y < IMAGE_HEIGHT; y++){
                 int index = (int) Math.Floor((float) x / IMAGE_WIDTH);

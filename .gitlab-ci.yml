@@ -1,0 +1,17 @@
+# pylint config:
+# C0103: Disabled snake_case check
+# C0114: Disabled file docstring
+# C0115: Disabled class docstring
+# W0511: Disabled fixme warning
+# W0231: Disabled super class init
+# E0401: Disabled import errors
+
+stages:
+  - lint
+
+pylint:
+  image: "python:3.11"
+  stage: lint
+  script:
+      - pip install pylint
+      - pylint --fail-under=0.8 --max-line-length=160 --disable C0103,W0511,C0114,C0115,W0231,E0401 demo/unity.py
