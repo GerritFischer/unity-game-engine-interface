@@ -15,7 +15,7 @@ def single_run() -> None:
     In this case it is used for debugging and testing
     '''
     # init simulator
-    simulator = UnitySimulator(scene_name='debug_1')
+    simulator = UnitySimulator(scene_name='debug_scene')
 
     class ImageWindow(QWidget):
         # window class to display image from simulator
@@ -41,11 +41,13 @@ def single_run() -> None:
             painter.drawImage(0, 0, self.qimage)
 
         def update_qimage(self):
+            # prints can be used to verify agent behaviour
+
             arr, pose = simulator.move_agent(0, 0, 1)
-            print("agent pose:" + str(pose))
+            #print("agent pose:" + str(pose))
             simulator.move_object("test_0", (-3, 0, 0, 1, 1, 1))
             simulator.set_illumination("Directional Light", [math.floor(pose[4] / 360 * 255.0), 0, 0])
-            print("current illumination " + str(simulator.get_illumination("Directional Light")))
+            #print("current illumination " + str(simulator.get_illumination("Directional Light")))
             # generate qimage
             self.qimage = QImage(arr.data, arr.shape[1], arr.shape[0], arr.shape[1] * 3, QImage.Format.Format_RGB888)
             # trigger a repaint
