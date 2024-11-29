@@ -185,7 +185,7 @@ class UnitySimulator(Simulator):
         return image_data
 
     # to be implemented
-    def get_illumination(self, light_source: str) -> NDArray:
+    def get_illumination(self, light_source: str) -> NDArray | None:
         '''
         This function retrieves color values of a light source
 
@@ -195,7 +195,7 @@ class UnitySimulator(Simulator):
 
         Returns
         ----------
-        colors :            A Array containing the color values in RGB of the parameter object
+        colors :            A Array containing the color values in RGB of the parameter object if object not found it will return none
         '''
         send_str: str = json.dumps({'command': 'get_illumination', "param": [light_source]})
         self.control_socket.send(send_str.encode('utf-8'))
@@ -208,7 +208,10 @@ class UnitySimulator(Simulator):
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
-        return finalColors
+        if finalColors.size == 0:
+            return None
+        else:
+            return finalColors
 
     def get_objects(self) -> dict[str, Any]:
         '''
@@ -281,4 +284,9 @@ class UnitySimulator(Simulator):
         self.control_socket.send(send_str.encode('utf-8'))
 
     def set_illumination(self, light_source: str, color: NDArray) -> None:
-        return super().set_illumination(light_source, color)
+        send_str: str = json.dumps({'command': 'set_illumination', "param": [light_source, color[0], color[1], color[2]]})
+        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.recv(50)
+
+    def stop(self) -> None:
+        return super().stop()
