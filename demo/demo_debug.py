@@ -9,6 +9,7 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QPainter, QImage
 from PyQt6.QtWidgets import QApplication, QWidget
 import sys
+import math
 
 
 def single_run() -> None:
@@ -18,7 +19,7 @@ def single_run() -> None:
     '''
     # init simulator
     simulator = UnitySimulator(scene_name='debug_scene', running=True)
-    print(simulator.echo("Test"))
+    print(simulator.echo("Simulator Echo"))
 
     '''
     # OLD MATPLOTLIBCODE
@@ -62,6 +63,7 @@ def single_run() -> None:
             # Set window properties
             self.setWindowTitle("Image demo")
             self.setGeometry(100, 100, 1024, 256)
+            print(simulator.get_objects())
 
         def paintEvent(self, event):
             # Paint the qimage on the window
@@ -69,8 +71,11 @@ def single_run() -> None:
             painter.drawImage(0, 0, self.qimage)
 
         def update_qimage(self):
-            arr = simulator.move_agent(0, 0, 1)
+            arr, pose = simulator.move_agent(0, 0, 1)
+            print("agent pose:" + str(pose))
             simulator.move_object("test_0",(-3,0,0,1,1,1))
+            simulator.set_illumination("Directional Light", [math.floor(pose[4] / 360 * 255.0), 0, 0])
+            print("current illumination " + str(simulator.get_illumination("Directional Light")))
             # generate qimage
             self.qimage = QImage(arr.data, arr.shape[1], arr.shape[0], arr.shape[1] * 3, QImage.Format.Format_RGB888)
             # trigger a repaint

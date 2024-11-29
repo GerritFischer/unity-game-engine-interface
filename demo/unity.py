@@ -182,8 +182,10 @@ class UnitySimulator(Simulator):
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
-        # TODO: return pose aswell
-        return image_data
+        # retrieve agent position
+        agent_pose: Pose = self.get_pose("agent")
+
+        return image_data, agent_pose
 
     # to be implemented
     def get_illumination(self, light_source: str) -> NDArray | None:

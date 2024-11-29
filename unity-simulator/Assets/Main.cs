@@ -34,7 +34,7 @@ public class Main
                                       "get_image_info",
                                       "get_objects",
                                       "move_object",
-                                      "set_illumination"
+                                      "set_illumination",
                                       "get_illumination",
                                       "stop",
                                       "get_position"};
