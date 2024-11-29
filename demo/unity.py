@@ -195,8 +195,7 @@ class UnitySimulator(Simulator):
 
         Returns
         ----------
-        colors :            A Array containing the color values in RGB of the parameter object
-        None :              The object that was gives as a parameter does not have a light source
+        colors :            A Array containing the color values in RGB of the parameter object if object not found it will return none
         '''
         send_str: str = json.dumps({'command': 'get_illumination', "param": [light_source]})
         self.control_socket.send(send_str.encode('utf-8'))
