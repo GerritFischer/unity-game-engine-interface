@@ -497,9 +497,6 @@ public class Main
         /// </summary>
         /// <param name="param"> The array of parameters </param>
         //---------------------------------------------------------------------
-
-<<<<<<< unity-simulator/Assets/Main.cs
-
         //init pose
         float[] coor = new float[] {float.NaN,float.NaN,float.NaN,float.NaN,float.NaN,float.NaN};
 
@@ -534,7 +531,6 @@ public class Main
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
-=======
     private static void stop(string[] param){
         //---------------------------------------------------------------------
         /// <summary>
@@ -549,7 +545,6 @@ public class Main
         
     }
 
->>>>>>> unity-simulator/Assets/Main.cs
 }
 
 [System.Serializable]
