@@ -304,7 +304,3 @@ class UnitySimulator(Simulator):
             return None
 
         return pose
-
-    def stop(self) -> None:
-        return super().stop()
-
