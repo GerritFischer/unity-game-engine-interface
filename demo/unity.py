@@ -210,11 +210,12 @@ class UnitySimulator(Simulator):
 
         if finalColors.size == 0:
             return None
-        else : return finalColors
+        else:
+            return finalColors
 
     def get_objects(self) -> dict[str, Any]:
         '''
-        This function retrieves object information from the current unity scene 
+        This function retrieves object information from the current unity scene
 
         Parameters
         ----------
@@ -261,15 +262,14 @@ class UnitySimulator(Simulator):
         None
         '''
 
-        #invokes move_object 
+        # invokes move_object
         send_str: str = json.dumps({'command': 'move_object', "param": [object_id, pose[0], pose[1],
                                                                         pose[2], pose[3], pose[4], pose[5]]})
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 
     def set_illumination(self, light_source: str, color: NDArray) -> None:
-        arr = color.tolist()
-        send_str: str = json.dumps({'command': 'set_illumination', "param": [light_source, arr[0], arr[1], arr[2]]})
+        send_str: str = json.dumps({'command': 'set_illumination', "param": [light_source, color[0], color[1], color[2]]})
         self.control_socket.send(send_str.encode('utf-8'))
         self.control_socket.recv(50)
 

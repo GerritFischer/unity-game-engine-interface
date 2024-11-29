@@ -11,8 +11,8 @@ def single_run() -> None:
     '''
     # init simulator
     simulator = UnitySimulator(scene_name='debug_scene', running=True)
-    arr = np.array([255,187,0])
-    arr2 = np.array([0, 255,10])
+    arr = [255, 187, 0]
+    arr2 = [0, 255, 10]
     simulator.set_illumination("Directional Light", arr)
     k = simulator.get_illumination("Directional Light")
     print("this is")
