@@ -1,6 +1,7 @@
 # framework imports
 from unity import UnitySimulator
 import time
+import numpy as np
 
 # currently only for testing will be removed later 
 def single_run() -> None:
@@ -9,13 +10,20 @@ def single_run() -> None:
     In this case it is used for debugging and testing
     '''
     # init simulator
-    simulator = UnitySimulator(scene_name='debug_1', running=True)
-    print(simulator.get_objects())
-    print(simulator.get_objects())
-    print(simulator.get_objects())
-    print(simulator.get_objects())
-    print(simulator.get_objects())
-    simulator.stop()
+    simulator = UnitySimulator(scene_name='debug_scene', running=True)
+    arr = [255, 187, 0]
+    arr2 = [0, 255, 10]
+    simulator.set_illumination("Directional Light", arr)
+    k = simulator.get_illumination("Directional Light")
+    print("this is")
+    print(k)
+    print(k[1])
+    simulator.set_illumination("test_0", arr)
+    simulator.set_illumination("Directional Light", arr2)
+    print("stop")
+    d = simulator.get_illumination("test_0")
+    print("this is")
+    print(d)
     
     
     
