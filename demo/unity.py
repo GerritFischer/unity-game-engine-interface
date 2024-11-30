@@ -105,8 +105,7 @@ class UnitySimulator(Simulator):
         recieved_echo:       The echo that came back from the simulator
         '''
         # convert message into formatted json command and send it
-        send_str: str = json.dumps({'command': 'echo', 'param': [message]})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(json.dumps({'command': 'echo', 'param': [message]}).encode('utf-8'))
         recieved_echo: str = self.control_socket.recv(1024).decode('utf-8')
 
         return recieved_echo
@@ -125,8 +124,7 @@ class UnitySimulator(Simulator):
         None
         '''
         # convert scene path into formatted json command and send it
-        send_str: str = json.dumps({'command': 'change_scene', 'param': [scene]})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(json.dumps({'command': 'change_scene', 'param': [scene]}).encode('utf-8'))
         self.control_socket.recv(50)
 
     def get_image_info(self) -> ImageInfo:
@@ -166,13 +164,11 @@ class UnitySimulator(Simulator):
         image_data :                        The image observation received from the simulation.
         '''
         # send the actuation command to the virtual agent
-        send_str: str = json.dumps({'command': 'step_simulation_without_physics', 'param': [x, y, yaw]})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(json.dumps({'command': 'step_simulation_without_physics', 'param': [x, y, yaw]}).encode('utf-8'))
         self.control_socket.recv(50)
 
         # retrieve image
-        send_str: str = json.dumps({'command': 'get_image', 'param': []})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(json.dumps({'command': 'get_image', 'param': []}).encode('utf-8'))
         image_bytes: bytes = self.receive_in_chunks(self.video_socket, self.image_info['height'] * self.image_info['width'] * self.image_info['channels'])
 
         # convert image into right format
@@ -183,12 +179,11 @@ class UnitySimulator(Simulator):
         self.control_socket.recv(50)
 
         # retrieve agent position
-        agent_pose: Pose = self.get_pose("agent")
+        agent_pose: Pose | None = self.get_pose("agent")
 
-        return image_data, agent_pose
+        return image_data, np.array(agent_pose)
 
-    # to be implemented
-    def get_illumination(self, light_source: str) -> NDArray | None:
+    def get_illumination(self, light_source: str) -> NDArray:
         '''
         This function retrieves color values of a light source
 
@@ -198,21 +193,21 @@ class UnitySimulator(Simulator):
 
         Returns
         ----------
-        colors :            A Array containing the color values in RGB of the parameter object if object not found it will return none
+        colors :            A Array containing the color values in RGB of the parameter object if object not found it will return -1, -1, -1
         '''
-        send_str: str = json.dumps({'command': 'get_illumination', "param": [light_source]})
-        self.control_socket.send(send_str.encode('utf-8'))
+
+        self.control_socket.send(json.dumps({'command': 'get_illumination', "param": [light_source]}).encode('utf-8'))
 
         allInfos: bytes = self.receive_in_chunks(self.data_socket, 1024)
-        allInfosStr: str = json.loads(allInfos.decode("utf-8"))
-        colors: List[float] = allInfosStr["colors"]
+        allInfosStr: dict = json.loads(allInfos.decode("utf-8"))
+        colors: List[int] = allInfosStr["colors"]
         finalColors: NDArray = (np.array(colors) * 255 + 0.1).astype(int)
 
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
         if finalColors.size == 0:
-            return None
+            return np.array({-1, -1, -1})
         else:
             return finalColors
 
@@ -228,20 +223,19 @@ class UnitySimulator(Simulator):
         ----------
         infoDic :            A dictionary containing information about all the objects in the current Unity scene
         '''
-        send_str: str = json.dumps({'command': 'get_objects', "param": []})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(json.dumps({'command': 'get_objects', "param": []}).encode('utf-8'))
 
         byteLenght = self.data_socket.recv(50)
         self.data_socket.send('AKN'.encode('utf-8'))
         byteSize = int(byteLenght[:-16].decode("utf-8"))
 
-        allInfos: bytes = self.receive_in_chunks(self.data_socket, byteSize)
-        allInfos: str = json.loads(allInfos.decode("utf-8"))
+        object_info_json: bytes = self.receive_in_chunks(self.data_socket, byteSize)
+        object_info: dict = json.loads(object_info_json.decode("utf-8"))
 
         infoDic: dict[str, Any] = {}
-        keys: List[str] = allInfos["keys"]
-        names: List[str] = allInfos["names"]
-        values: List[str] = allInfos["values"]
+        keys: List[str] = object_info["keys"]
+        names: List[str] = object_info["names"]
+        values: List[str] = object_info["values"]
 
         for key, name, value in zip(keys, names, values):
             infoDic[key] = {'name: ' + name + ' type: ' + value}
@@ -266,9 +260,9 @@ class UnitySimulator(Simulator):
         '''
 
         # invokes move_object
-        send_str: str = json.dumps({'command': 'move_object', "param": [object_id, pose[0], pose[1],
+        send_str_move: str = json.dumps({'command': 'move_object', "param": [object_id, pose[0], pose[1],
                                                                         pose[2], pose[3], pose[4], pose[5]]})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(send_str_move.encode('utf-8'))
         self.control_socket.recv(50)
 
     def stop(self) -> None:
@@ -283,22 +277,19 @@ class UnitySimulator(Simulator):
         ----------
         infoDic :            A dictionary containing information about all the objects in the current Unity scene
         '''
-        send_str: str = json.dumps({'command': 'stop', "param": []})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(json.dumps({'command': 'stop', "param": []}).encode('utf-8'))
 
     def set_illumination(self, light_source: str, color: NDArray) -> None:
-        send_str: str = json.dumps({'command': 'set_illumination', "param": [light_source, color[0], color[1], color[2]]})
-        self.control_socket.send(send_str.encode('utf-8'))
+        self.control_socket.send(json.dumps({'command': 'set_illumination', "param": [light_source, color[0], color[1], color[2]]}).encode('utf-8'))
         self.control_socket.recv(50)
     
-    def get_pose(self, object_id:str)->Pose|None:
-        send_str: str = json.dumps({'command': 'get_position', "param": [object_id]})
-        self.control_socket.send(send_str.encode('utf-8'))
+    def get_pose(self, object_id:str)-> Pose | None:
+        self.control_socket.send(json.dumps({'command': 'get_position', "param": [object_id]}).encode('utf-8'))
 
         allInfos: bytes = self.receive_in_chunks(self.data_socket, 1024)
-        allInfosStr: str = json.loads(allInfos.decode("utf-8"))
+        allInfosStr: dict = json.loads(allInfos.decode("utf-8"))
 
-        pose:Pose =tuple(allInfosStr["poses"])
+        pose: Pose = tuple(allInfosStr["poses"])
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
