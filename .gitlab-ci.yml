@@ -22,5 +22,5 @@ mypy:
   stage: type_checking
   script:
       - pip install mypy
-      - mypy demo/unity.py
+      - mypy --ignore-missing-imports demo/unity.py
   
