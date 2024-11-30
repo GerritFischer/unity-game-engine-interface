@@ -1,15 +1,17 @@
 # basic imports
+import math
 import socket
 import json
 import os
 import subprocess
-import numpy as np
-# framework imports
-from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 # typing imports
 from typing import Any, List
 from numpy.typing import NDArray
-import math
+# framework imports
+import numpy as np
+from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
+
+
 
 
 class UnitySimulator(Simulator):
@@ -37,7 +39,8 @@ class UnitySimulator(Simulator):
                 self.executable = os.environ['UNITY_EXECUTABLE']
             else:
                 self.executable = executable
-            subprocess.Popen([self.executable])
+            with subprocess.Popen([self.executable]) as _:
+                pass
 
         # init sockets
         self.control_socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,8 +48,8 @@ class UnitySimulator(Simulator):
         self.data_socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # connect sockets
-        socketsConnected: bool = False
-        while not socketsConnected:
+        sockets_connected: bool = False
+        while not sockets_connected:
             try:
                 self.connect_socket(self.control_socket, 5000)
                 print("Control socket connected!")
@@ -54,8 +57,8 @@ class UnitySimulator(Simulator):
                 print("Video socket connected!")
                 self.connect_socket(self.data_socket, 5002)
                 print("Data socket connected!")
-                socketsConnected = True
-            except Exception:
+                sockets_connected = True
+            except (socket.timeout, socket.error, ConnectionRefusedError):
                 # if socket connects fails (120s), print error, retry
                 print("Couldn't connect to unity simulator, retrying...")
 
@@ -73,7 +76,7 @@ class UnitySimulator(Simulator):
 
         Parameters
         ----------
-        socket :                            The socket to read the data from.
+        used_socket :                            The socket to read the data from.
         chunk_size :                        The size of the chunk to read.
 
         Returns
@@ -198,18 +201,17 @@ class UnitySimulator(Simulator):
 
         self.control_socket.send(json.dumps({'command': 'get_illumination', "param": [light_source]}).encode('utf-8'))
 
-        allInfos: bytes = self.receive_in_chunks(self.data_socket, 1024)
-        allInfosStr: dict = json.loads(allInfos.decode("utf-8"))
-        colors: List[int] = allInfosStr["colors"]
-        finalColors: NDArray = (np.array(colors) * 255 + 0.1).astype(int)
+        illumination_info_json: bytes = self.receive_in_chunks(self.data_socket, 1024)
+        illumination_info: dict = json.loads(illumination_info_json.decode("utf-8"))
+        colors: List[int] = illumination_info["colors"]
+        final_colors: NDArray = (np.array(colors) * 255 + 0.1).astype(int)
 
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
-        if finalColors.size == 0:
+        if final_colors.size == 0:
             return np.array({-1, -1, -1})
-        else:
-            return finalColors
+        return final_colors
 
     def get_objects(self) -> dict[str, Any]:
         '''
@@ -221,29 +223,29 @@ class UnitySimulator(Simulator):
 
         Returns
         ----------
-        infoDic :            A dictionary containing information about all the objects in the current Unity scene
+        info_dic :            A dictionary containing information about all the objects in the current Unity scene
         '''
         self.control_socket.send(json.dumps({'command': 'get_objects', "param": []}).encode('utf-8'))
 
-        byteLenght = self.data_socket.recv(50)
+        byte_length: bytes = self.data_socket.recv(50)
         self.data_socket.send('AKN'.encode('utf-8'))
-        byteSize = int(byteLenght[:-16].decode("utf-8"))
+        byte_size = int(byte_length[:-16].decode("utf-8"))
 
-        object_info_json: bytes = self.receive_in_chunks(self.data_socket, byteSize)
+        object_info_json: bytes = self.receive_in_chunks(self.data_socket, byte_size)
         object_info: dict = json.loads(object_info_json.decode("utf-8"))
 
-        infoDic: dict[str, Any] = {}
+        info_dic: dict[str, Any] = {}
         keys: List[str] = object_info["keys"]
         names: List[str] = object_info["names"]
         values: List[str] = object_info["values"]
 
         for key, name, value in zip(keys, names, values):
-            infoDic[key] = {'name: ' + name + ' type: ' + value}
+            info_dic[key] = {'name: ' + name + ' type: ' + value}
 
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
-        return infoDic
+        return info_dic
 
     def move_object(self, object_id: str, pose: Pose) -> None:
         '''
@@ -251,7 +253,7 @@ class UnitySimulator(Simulator):
 
         Parameters
         ----------
-        object_id :                         The id of the moved object
+        object_id :                         The id of the moved object, (currently the name)
         pose :                              The tuple contains the new position and rotation
 
         Returns
@@ -275,21 +277,44 @@ class UnitySimulator(Simulator):
 
         Returns
         ----------
-        infoDic :            A dictionary containing information about all the objects in the current Unity scene
+        None
         '''
         self.control_socket.send(json.dumps({'command': 'stop', "param": []}).encode('utf-8'))
 
     def set_illumination(self, light_source: str, color: NDArray) -> None:
+        '''
+        This function sets the RGB values of a light component connected to a game object.
+
+        Parameters
+        ----------
+        light_source:                         The name of the object the light source is connected to
+        colors:                               An array of RGB values ranging from 0 to 255
+
+        Returns
+        ----------
+        None
+        '''
         self.control_socket.send(json.dumps({'command': 'set_illumination', "param": [light_source, color[0], color[1], color[2]]}).encode('utf-8'))
         self.control_socket.recv(50)
-    
+
     def get_pose(self, object_id:str)-> Pose | None:
+        '''
+        This function will return the pose of a given object. If the object name is not valid it will return None.
+
+        Parameters
+        ----------
+        object_id:                            The name of the object.
+
+        Returns
+        ----------
+        pose:                                 The pose of the object.
+        '''
         self.control_socket.send(json.dumps({'command': 'get_position', "param": [object_id]}).encode('utf-8'))
 
-        allInfos: bytes = self.receive_in_chunks(self.data_socket, 1024)
-        allInfosStr: dict = json.loads(allInfos.decode("utf-8"))
+        pose_info_json: bytes = self.receive_in_chunks(self.data_socket, 1024)
+        pose_info: dict = json.loads(pose_info_json.decode("utf-8"))
 
-        pose: Pose = tuple(allInfosStr["poses"])
+        pose: Pose = tuple(pose_info["poses"])
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
