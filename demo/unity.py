@@ -3,6 +3,7 @@ import math
 import socket
 import json
 import os
+import cv2
 import subprocess
 import gymnasium as gym
 # typing imports
@@ -200,15 +201,18 @@ class UnitySimulator(Simulator):
         # convert image into right format
         image_data: NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
         image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
+        if self.resize is not None:
+            image_data = cv2.resize(image_data, self.resize)
 
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
 
         # retrieve agent position
         agent_pose: Pose | None = self.get_pose("agent")
+        print(image_data)
 
-        return image_data, np.array(agent_pose)
-
+        return np.array(agent_pose), image_data
+    
     def get_illumination(self, light_source: str) -> NDArray:
         '''
         This function retrieves color values of a light source

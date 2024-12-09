@@ -35,7 +35,7 @@ def simulation_run(nodes: dict[NodeID, Node], staring_nodes: list[NodeID], trial
     main_window = pg.GraphicsLayoutWidget(title='Topology Test')
     main_window.show()
     # prepare simulator
-    simulator = UnitySimulator("debug_scene", running=True, resize=(30, 1))
+    simulator = UnitySimulator("room", running=True, resize=(30, 1))
     # init environment
     modules: dict[str, Any] = {}
     interface = Topology(modules, nodes, staring_nodes, simulator, main_window)
