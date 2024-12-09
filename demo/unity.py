@@ -4,18 +4,20 @@ import socket
 import json
 import os
 import subprocess
+import gymnasium as gym
 # typing imports
 from typing import Any, List
 from numpy.typing import NDArray
 # framework imports
 import numpy as np
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
+from cobel3.interface.interface import Observation
 
 
 
 
 class UnitySimulator(Simulator):
-    def __init__(self, scene_name: str, executable: None | str = None, running: bool = False) -> None:
+    def __init__(self, scene_name: str, executable: None | str = None, resize: None | tuple[int, int] = None, running: bool = False) -> None:
         '''
         The Unity interface class.
         This class connects to the Unity enviroment and controls the flow of
@@ -68,6 +70,14 @@ class UnitySimulator(Simulator):
         # get image info of agent
         self.image_info: ImageInfo = self.get_image_info()
 
+
+        self.resize = resize
+        self.observation_space: gym.spaces.Space
+
+        if self.resize is None:
+            self.observation_space = gym.spaces.Box(0, 255, shape=(self.image_info['width'], self.image_info['height'], self.image_info['channels']))
+        else:
+            self.observation_space = gym.spaces.Box(0, 255, shape=(self.resize[0], self.resize[1], self.image_info['channels']))
         print("Unity simulator initialized!")
 
     def receive_in_chunks(self, socket: socket.socket, chunk_size: int) -> bytes:
@@ -150,7 +160,20 @@ class UnitySimulator(Simulator):
         self.control_socket.recv(50)
 
         return image_info
+    def get_observation(self, pose: Pose) -> Observation:
+        '''
+        This function returns the observation at a given pose.
 
+        Parameters
+        ----------
+        pose :                              The global pose that the agent is moved to.
+
+        Returns
+        ----------
+        observation :                       The observation at the given pose.
+        '''
+        return self.move_agent(pose[0], pose[1], pose[3])[1]
+    
     def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
         '''
         This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
