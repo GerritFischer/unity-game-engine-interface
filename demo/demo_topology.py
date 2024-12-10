@@ -58,12 +58,12 @@ if __name__ == '__main__':
     nodes: dict[NodeID, Node]
     starting_nodes: list[NodeID]
     if len(sys.argv) > 1 and sys.argv[1] == 'grid':
-        nodes, starting_nodes = grid(5, (-0.5, 0.5))
+        nodes, starting_nodes = grid(5, (-5.0, 5.0))
     elif len(sys.argv) > 1 and sys.argv[1] == 'hexagonal':
-        nodes, starting_nodes = hexagonal(10, (-0.5, 0.5))
+        nodes, starting_nodes = hexagonal(10, (-5.0, 5.0))
     elif len(sys.argv) > 1 and sys.argv[1] == 't_maze':
-        nodes, starting_nodes = t_maze(6, 3, 2, 0.1)
+        nodes, starting_nodes = t_maze(9, 4, 2, 0.5)
     else:
-        nodes, starting_nodes = linear_track(10, 2, 0.1, 20, 'right')
+        nodes, starting_nodes = linear_track(11, 2, 0.5, 20, 'right')
     # run
     simulation_run(nodes, starting_nodes)

@@ -209,7 +209,6 @@ class UnitySimulator(Simulator):
 
         # retrieve agent position
         agent_pose: Pose | None = self.get_pose("agent")
-        print(image_data)
 
         return np.array(agent_pose), image_data
     
