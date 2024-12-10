@@ -1,28 +1,29 @@
 # basic imports
 import sys
-import numpy as np
-import pyqtgraph as pg # type: ignore
-import gymnasium as gym
+# typing
+from typing import Any
 # CoBeL-RL
 from cobel3.agent import QAgent
 from cobel3.policy import EpsilonGreedy
 from cobel3.typing import CallbackDict
 from cobel3.monitor import EscapeLatencyMonitor
 from cobel3.interface import Topology
-from unity import UnitySimulator
 from cobel3.misc.topology_tools import linear_track, grid, hexagonal, t_maze
-# typing
-from typing import Any
 from cobel3.interface.topology import Node, NodeID
+# unity interface
+from unity import UnitySimulator
+# framework imports
+import pyqtgraph as pg # type: ignore
 
 
-def simulation_run(nodes: dict[NodeID, Node], staring_nodes: list[NodeID], trials: int = 500, steps: int = 50) -> None:
+
+def simulation_run(topology_nodes: dict[NodeID, Node], staring_nodes: list[NodeID], trials: int = 500, steps: int = 50) -> None:
     '''
     This function represents one simulation run with the Topology interface.
 
     Parameters
     ----------
-    nodes :                             The topology nodes.
+    topology_nodes :                    The topology nodes.
     starting_nodes :                    The starting nodes.
     trials :                            The number of training trials.
     steps :                             The maximum number of steps per trial.
@@ -38,7 +39,7 @@ def simulation_run(nodes: dict[NodeID, Node], staring_nodes: list[NodeID], trial
     simulator = UnitySimulator("room", running=True, resize=(30, 1))
     # init environment
     modules: dict[str, Any] = {}
-    interface = Topology(modules, nodes, staring_nodes, simulator, main_window)
+    interface = Topology(modules, topology_nodes, staring_nodes, simulator, main_window)
     # init monitor and prepare callbacks
     el_monitor = EscapeLatencyMonitor(trials, steps, main_window)
     callbacks: CallbackDict = {'on_trial_end': [el_monitor.update]}
