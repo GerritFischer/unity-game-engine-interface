@@ -9,13 +9,16 @@ from typing import Any, List
 from numpy.typing import NDArray
 # framework imports
 import numpy as np
+import cv2
+import gymnasium as gym
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
+from cobel3.interface.interface import Observation
 
 
 
 
 class UnitySimulator(Simulator):
-    def __init__(self, scene_name: str, executable: None | str = None, running: bool = False) -> None:
+    def __init__(self, scene_name: str, executable: None | str = None, resize: None | tuple[int, int] = None, running: bool = False) -> None:
         '''
         The Unity interface class.
         This class connects to the Unity enviroment and controls the flow of
@@ -68,6 +71,14 @@ class UnitySimulator(Simulator):
         # get image info of agent
         self.image_info: ImageInfo = self.get_image_info()
 
+
+        self.resize = resize
+        self.observation_space: gym.spaces.Space
+
+        if self.resize is None:
+            self.observation_space = gym.spaces.Box(0, 255, shape=(self.image_info['width'], self.image_info['height'], self.image_info['channels']))
+        else:
+            self.observation_space = gym.spaces.Box(0, 255, shape=(self.resize[0], self.resize[1], self.image_info['channels']))
         print("Unity simulator initialized!")
 
     def receive_in_chunks(self, socket: socket.socket, chunk_size: int) -> bytes:
@@ -76,7 +87,7 @@ class UnitySimulator(Simulator):
 
         Parameters
         ----------
-        used_socket :                            The socket to read the data from.
+        socket :                            The socket to read the data from.
         chunk_size :                        The size of the chunk to read.
 
         Returns
@@ -150,6 +161,19 @@ class UnitySimulator(Simulator):
         self.control_socket.recv(50)
 
         return image_info
+    def get_observation(self, pose: Pose) -> Observation:
+        '''
+        This function returns the observation at a given pose.
+
+        Parameters
+        ----------
+        pose :                              The global pose that the agent is moved to.
+
+        Returns
+        ----------
+        observation :                       The observation at the given pose.
+        '''
+        return self.move_agent(pose[0], pose[1], pose[3])[1]
 
     def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
         '''
@@ -177,6 +201,8 @@ class UnitySimulator(Simulator):
         # convert image into right format
         image_data: NDArray = np.frombuffer(image_bytes, dtype=np.uint8)
         image_data = np.reshape(image_data, (self.image_info['height'], self.image_info['width'], self.image_info['channels']))
+        if self.resize is not None:
+            image_data = cv2.resize(image_data, self.resize)
 
         self.video_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
@@ -184,7 +210,7 @@ class UnitySimulator(Simulator):
         # retrieve agent position
         agent_pose: Pose | None = self.get_pose("agent")
 
-        return image_data, np.array(agent_pose)
+        return np.array(agent_pose), image_data
 
     def get_illumination(self, light_source: str) -> NDArray:
         '''

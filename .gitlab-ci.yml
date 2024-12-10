@@ -15,7 +15,7 @@ pylint:
   stage: code_quality
   script:
       - pip install pylint
-      - pylint --max-line-length=160 --disable W0511,C0114,C0115,W0231,W0621,E0401 demo/unity.py
+      - pylint --max-line-length=160 --generated-members cv2 --disable W0511,C0114,C0115,W0231,W0621,E0401 demo/unity.py
 
 mypy:
   image: "python:3.11"
