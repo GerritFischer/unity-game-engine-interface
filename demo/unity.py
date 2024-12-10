@@ -3,14 +3,14 @@ import math
 import socket
 import json
 import os
-import cv2
 import subprocess
-import gymnasium as gym
 # typing imports
 from typing import Any, List
 from numpy.typing import NDArray
 # framework imports
 import numpy as np
+import cv2
+import gymnasium as gym
 from cobel3.interface.simulator.simulator import Simulator, ImageInfo, Pose
 from cobel3.interface.interface import Observation
 
@@ -87,7 +87,7 @@ class UnitySimulator(Simulator):
 
         Parameters
         ----------
-        used_socket :                            The socket to read the data from.
+        socket :                            The socket to read the data from.
         chunk_size :                        The size of the chunk to read.
 
         Returns
@@ -174,7 +174,7 @@ class UnitySimulator(Simulator):
         observation :                       The observation at the given pose.
         '''
         return self.move_agent(pose[0], pose[1], pose[3])[1]
-    
+
     def move_agent(self, x: float, y: float, yaw: float) -> tuple[NDArray, NDArray]:
         '''
         This function propels the simulation. It uses teleportation to guide the agent directly by means of global x, y, yaw values.
@@ -211,7 +211,7 @@ class UnitySimulator(Simulator):
         agent_pose: Pose | None = self.get_pose("agent")
 
         return np.array(agent_pose), image_data
-    
+
     def get_illumination(self, light_source: str) -> NDArray:
         '''
         This function retrieves color values of a light source
