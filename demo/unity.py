@@ -265,11 +265,11 @@ class UnitySimulator(Simulator):
         names: List[str] = object_info["names"]
         values: List[str] = object_info["values"]
         properties: List[np.int16] = object_info["properties"]
-        
+
         for key, name, value, propert in zip(keys, names, values, properties):
             prop:str = format(propert, "016b")
             info_dic[key] = {'name: ' + name + ' type: ' + value + " properties: "+ prop+ " isLight: "+ prop[15]+
-                            " isCamera: "+ prop[14], " isGeometric: " + prop[13]} 
+                            " isCamera: "+ prop[14], " isGeometric: " + prop[13]}
 
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
