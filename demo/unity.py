@@ -264,9 +264,12 @@ class UnitySimulator(Simulator):
         keys: List[str] = object_info["keys"]
         names: List[str] = object_info["names"]
         values: List[str] = object_info["values"]
-
-        for key, name, value in zip(keys, names, values):
-            info_dic[key] = {'name: ' + name + ' type: ' + value}
+        properties: List[np.int16] = object_info["properties"]
+        
+        for key, name, value, propert in zip(keys, names, values, properties):
+            prop:str = format(propert, "016b")
+            info_dic[key] = {'name: ' + name + ' type: ' + value + " properties: "+ prop+ " isLight: "+ prop[15]+
+                            " isCamera: "+ prop[14], " isGeometric: " + prop[13]} 
 
         self.data_socket.send('AKN'.encode('utf-8'))
         self.control_socket.recv(50)
@@ -320,7 +323,8 @@ class UnitySimulator(Simulator):
         ----------
         None
         '''
-        self.control_socket.send(json.dumps({'command': 'set_illumination', "param": [light_source, color[0], color[1], color[2]]}).encode('utf-8'))
+        arr: list = color.tolist()
+        self.control_socket.send(json.dumps({'command': 'set_illumination', "param": [light_source, arr[0], arr[1], arr[2]]}).encode('utf-8'))
         self.control_socket.recv(50)
 
     def get_pose(self, object_id:str)-> Pose | None:
