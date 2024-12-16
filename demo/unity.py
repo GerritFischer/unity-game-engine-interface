@@ -42,9 +42,7 @@ class UnitySimulator(Simulator):
                 self.executable = os.environ['UNITY_EXECUTABLE']
             else:
                 self.executable = executable
-            with subprocess.Popen([self.executable]) as _:
-                pass
-
+            self.process = subprocess.Popen([self.executable])
         # init sockets
         self.control_socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.video_socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

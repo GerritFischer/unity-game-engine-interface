@@ -71,7 +71,7 @@ def single_run() -> None:
             painter.drawImage(0, 0, self.qimage)
 
         def update_qimage(self):
-            arr, pose = simulator.move_agent(0, 0, 1)
+            pose, arr = simulator.move_agent(0, 0, 1)
             print("agent pose:" + str(pose))
             simulator.move_object("test_0",(-3,0,0,1,1,1))
             simulator.set_illumination("Directional Light", [math.floor(pose[4] / 360 * 255.0), 0, 0])
