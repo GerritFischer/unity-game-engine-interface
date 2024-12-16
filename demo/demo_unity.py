@@ -15,7 +15,7 @@ def single_run() -> None:
     In this case it is used for debugging and testing
     '''
     # init simulator
-    simulator = UnitySimulator(scene_name='debug_scene')
+    simulator = UnitySimulator(scene_name='debug_1')
 
     class ImageWindow(QWidget):
         # window class to display image from simulator
