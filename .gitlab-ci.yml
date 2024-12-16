@@ -5,6 +5,7 @@
 # W0231: Disabled super class init
 # E0401: Disabled import errors
 # W0621: Disabled redefining error, error from simulator class
+# R1732: Disabled with for resource-allocation
 
 stages:
   - code_quality
@@ -15,7 +16,7 @@ pylint:
   stage: code_quality
   script:
       - pip install pylint
-      - pylint --max-line-length=160 --generated-members cv2 --disable W0511,C0114,C0115,W0231,W0621,E0401 demo/unity.py
+      - pylint --max-line-length=160 --generated-members cv2 --disable W0511,C0114,C0115,W0231,W0621,E0401,R1732 demo/unity.py
 
 mypy:
   image: "python:3.11"
