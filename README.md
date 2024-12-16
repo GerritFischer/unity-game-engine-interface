@@ -13,7 +13,9 @@ A 3D simulator created in Unity Game Engine to be used with CoBeL-RL [(Diekmann 
 
 1. Download or clone the project using git.
 
-2. ...
+2. Install the [Unity Hub](https://docs.unity3d.com/hub/manual/InstallHub.html)
+
+3. Install a Unity Version (developed and tested on 2022.3.49f1)
 
 </details>
 
@@ -25,7 +27,7 @@ Prebuild simulators are available for Windows and Linux on ...
 
 If you wish to build the simulator yourself follow the instructions on the [official documentation](https://docs.unity.com).
 
-The Unity project files are found in the ``project`` directory.
+The Unity project files are found in the ``unity-simulator`` directory.
 
 -------------------------------------------------------------------------------------------
 
@@ -33,7 +35,9 @@ The Unity project files are found in the ``project`` directory.
 
 In order to use scenes you have created in Unity ensure the follwing:
 
-1. ...
+1. Your scene must be packed into an [AssetBundle](https://docs.unity3d.com/2022.3/Documentation/Manual/AssetBundles-Workflow.html). This AssetBundle can contain multiple scenes.
+
+2. Ensure that the names of the game objects do not clash with the predefined names (agent, camera_n, camera_e, camera_s and camera_w).
 
 -------------------------------------------------------------------------------------------
 
