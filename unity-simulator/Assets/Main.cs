@@ -529,14 +529,10 @@ public class Main
             objectInfo.values = valueList.ToArray();
             mainFin.Set();
         });
-
         mainFin.Wait();
         //main thread is finished now turning it into bytes
         string all_info_string = JsonUtility.ToJson(objectInfo);
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(all_info_string);
-
-        short myShort = objectInfo.properties[0];
-        byte[] bytes = System.BitConverter.GetBytes(myShort);
         string bytesize = all_info_bytes.Length.ToString();    
         byte[] all_info_bytes_length = Encoding.UTF8.GetBytes(bytesize);
 
