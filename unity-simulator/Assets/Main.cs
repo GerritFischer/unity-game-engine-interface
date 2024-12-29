@@ -503,14 +503,27 @@ public class Main
             List<string> keyList = new List<string>();
             List<string> nameList = new List<string>();
             List<string> valueList = new List<string>();
+            List<short> propertyList = new List<short>();
+            List<(System.Type, short) > compCheck = new(){
+                (typeof(Light), (1 << 0)),       //Bit 0 for Lightsource
+            	(typeof(Camera), (1 << 1)),      //Bit 1 for camera 
+                (typeof(MeshRenderer), (1 << 2)) //Bit 2 for geometric Forms 
+                //can be expanded when nescessary
+            }; 
 
-            foreach (GameObject go in all_Objects)
-            {
-                keyList.Add(go.GetInstanceID().ToString());
-                nameList.Add(go.name);
-                valueList.Add(go.GetType().ToString());
+            foreach(GameObject currObject in all_Objects){
+                short properties = 0;
+                foreach (var (type, bitmask) in compCheck){
+                    if(currObject.GetComponent(type) != null){
+                        properties |= bitmask;
+                    }
+                }
+                keyList.Add(currObject.GetInstanceID().ToString());
+                nameList.Add(currObject.name);
+                valueList.Add(currObject.GetType().ToString());
+                propertyList.Add(properties);
             }
-
+            objectInfo.properties = propertyList.ToArray();
             objectInfo.keys = keyList.ToArray();
             objectInfo.names = nameList.ToArray();
             objectInfo.values = valueList.ToArray();
@@ -522,8 +535,9 @@ public class Main
         string all_info_string = JsonUtility.ToJson(objectInfo);
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(all_info_string);
 
-
-        string bytesize = all_info_bytes.Length.ToString();
+        short myShort = objectInfo.properties[0];
+        byte[] bytes = System.BitConverter.GetBytes(myShort);
+        string bytesize = all_info_bytes.Length.ToString();    
         byte[] all_info_bytes_length = Encoding.UTF8.GetBytes(bytesize);
 
         send_data(dataStream, all_info_bytes_length);
@@ -622,7 +636,12 @@ public class ObjectInfo
     public string[] keys;
     public string[] names;
     public string[] values;
+<<<<<<< unity-simulator/Assets/Main.cs
 
+=======
+    public short[] properties;
+    
+>>>>>>> unity-simulator/Assets/Main.cs
 
 }
 
