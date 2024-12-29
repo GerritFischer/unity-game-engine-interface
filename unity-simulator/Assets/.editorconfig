@@ -1,0 +1,3 @@
+[*.cs]
+# Entferne überflüssige Leerzeichen am Ende einer Zeile
+trim_trailing_whitespace = true
