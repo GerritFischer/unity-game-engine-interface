@@ -26,8 +26,7 @@ public class Main
     private static SynchronizationContext mainThreadContext;
     private static byte[] aknBytes = Encoding.UTF8.GetBytes("AKN");
     private static List<AssetBundle> loadedBundles = new List<AssetBundle>();
-
-    private static string[] commands={"echo", 
+    private static string[] commands ={"echo",
                                       "change_scene",
                                       "step_simulation_without_physics",
                                       "get_image",
@@ -41,9 +40,10 @@ public class Main
     private static bool img_akn_recieved = false;
     private static bool data_akn_recieved = false;
     private static Agent agent;
-    
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void OnStart() {
+    static void OnStart()
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Function that runs before scene load, saves the main thread context
@@ -52,7 +52,7 @@ public class Main
         //---------------------------------------------------------------------
         string path = Path.Combine(".", "addons");
         LoadAssetBundles(path);
-        SceneManager.sceneLoaded+=createAgent;
+        SceneManager.sceneLoaded += createAgent;
         mainThreadContext = SynchronizationContext.Current;
         // starts thread that initializes control, video and data socket
         // if this function is called without a new thread unity wont compile (for some reason)
@@ -61,7 +61,8 @@ public class Main
         socketThread.Start();
     }
 
-    static void StartSocketProcess(){
+    static void StartSocketProcess()
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Starts each socket server and waits for client to connect, 
@@ -80,9 +81,10 @@ public class Main
         dataSocket.Start();
         Debug.Log("data server started, waiting for connection ......");
 
-        while(!connected)
+        while (!connected)
         {
-            try{
+            try
+            {
                 controlClient = controlSocket.AcceptTcpClient();
                 Debug.Log("control client connected.");
 
@@ -94,8 +96,9 @@ public class Main
                 connected = true;
             }
 
-            catch (Exception e) {
-                Debug.LogError("couldn't connect because of:  " + e.Message );
+            catch (Exception e)
+            {
+                Debug.LogError("couldn't connect because of:  " + e.Message);
             }
 
         }
@@ -109,10 +112,11 @@ public class Main
         controlClientThread.Start();
         videoClientThread.Start();
         dataClientThread.Start();
-                    
+
     }
 
-    static void HandleControlClient(TcpClient client){
+    static void HandleControlClient(TcpClient client)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Handles the control socket, decodes json into command object, 
@@ -124,31 +128,34 @@ public class Main
         controlStream = client.GetStream();
         byte[] buffer = new byte[1024];
         int bytesRead;
-         
-        while ((bytesRead = controlStream.Read(buffer, 0, buffer.Length)) != 0){
+
+        while ((bytesRead = controlStream.Read(buffer, 0, buffer.Length)) != 0)
+        {
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received: " + message);
 
             Command json = JsonUtility.FromJson<Command>(message);
-            string command= json.command;
-            string [] param = json.param;
+            string command = json.command;
+            string[] param = json.param;
             Debug.Log(param.GetType());
             Debug.Log($"Command: {command} with parameters: {string.Join(",", param)}");
 
-            if (commands.Contains(command)){
+            if (commands.Contains(command))
+            {
                 Type type = typeof(Main);
                 MethodInfo method = type.GetMethod(command, BindingFlags.Static | BindingFlags.NonPublic);
-                method.Invoke(null, new object[]{param});
+                method.Invoke(null, new object[] { param });
                 Debug.Log($"Command: {command} is done");
             }
-            else{
+            else
+            {
                 Debug.Log($"Command: {command} is not defined");
             }
-
         }
 
     }
-    static void HandleVideoClient(TcpClient client){
+    static void HandleVideoClient(TcpClient client)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Handles the video socket
@@ -158,8 +165,9 @@ public class Main
         videoStream = client.GetStream();
         byte[] buffer = new byte[1024];
         int bytesRead;
-         
-        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0){
+
+        while ((bytesRead = videoStream.Read(buffer, 0, buffer.Length)) != 0)
+        {
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received on video: " + message);
             img_akn_recieved = true;
@@ -167,7 +175,8 @@ public class Main
 
     }
 
-    static void HandleDataClient(TcpClient client){
+    static void HandleDataClient(TcpClient client)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Handles the data socket
@@ -177,8 +186,9 @@ public class Main
         dataStream = client.GetStream();
         byte[] buffer = new byte[1024];
         int bytesRead;
-         
-        while ((bytesRead = dataStream.Read(buffer, 0, buffer.Length)) != 0){
+
+        while ((bytesRead = dataStream.Read(buffer, 0, buffer.Length)) != 0)
+        {
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log("Received on data: " + message);
             data_akn_recieved = true;
@@ -186,7 +196,8 @@ public class Main
 
     }
 
-    static void send_data(NetworkStream stream, byte[] data){
+    static void send_data(NetworkStream stream, byte[] data)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// sends data via the given socket and adds end of data bytes at the end
@@ -199,7 +210,8 @@ public class Main
     }
 
 
-    static void echo(string[] param){
+    static void echo(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Recieves a message as first entry of param array, sends it back
@@ -210,7 +222,8 @@ public class Main
         controlStream.Write(responseData, 0, responseData.Length);
     }
 
-    static void change_scene(string[] param){
+    static void change_scene(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Changes the scene to the scene with the name given in param[0]
@@ -218,18 +231,22 @@ public class Main
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
         string scene_name = param[0];
-        RunOnMainThread(() =>  {
-            try{
+        RunOnMainThread(() =>
+        {
+            try
+            {
                 SceneManager.LoadScene(scene_name);
             }
-            catch(Exception e){
-                Debug.LogWarning(e.Message);    
-            }   
+            catch (Exception e)
+            {
+                Debug.LogWarning(e.Message);
+            }
             controlStream.Write(aknBytes, 0, aknBytes.Length);
         });
-           
+
     }
-    static void move_object(string[] param){//---------------------------------------------------------------------
+    static void move_object(string[] param)
+    {//---------------------------------------------------------------------
         /// <summary>
         /// Changes the scene to the scene with the name given in param[0]
         /// </summary>
@@ -237,105 +254,116 @@ public class Main
         //---------------------------------------------------------------------
 
         //converts sended string to float
-        float pos_x=float.Parse(param[1],CultureInfo.InvariantCulture);
-        float pos_y=float.Parse(param[2],CultureInfo.InvariantCulture);
-        float pos_z=float.Parse(param[3],CultureInfo.InvariantCulture);
-        float rot_x=float.Parse(param[4],CultureInfo.InvariantCulture);
-        float rot_y=float.Parse(param[5],CultureInfo.InvariantCulture);
-        float rot_z=float.Parse(param[6],CultureInfo.InvariantCulture);
+        float pos_x = float.Parse(param[1], CultureInfo.InvariantCulture);
+        float pos_y = float.Parse(param[2], CultureInfo.InvariantCulture);
+        float pos_z = float.Parse(param[3], CultureInfo.InvariantCulture);
+        float rot_x = float.Parse(param[4], CultureInfo.InvariantCulture);
+        float rot_y = float.Parse(param[5], CultureInfo.InvariantCulture);
+        float rot_z = float.Parse(param[6], CultureInfo.InvariantCulture);
 
         //waiting till the main Thread is finished
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false);
 
-        RunOnMainThread(() => {
+        RunOnMainThread(() =>
+        {
             //search for id
             GameObject current_object = GameObject.Find("/" + param[0]);
-            if (current_object != null) {
+            if (current_object != null)
+            {
                 //transform the position and rotation
-                current_object.transform.localPosition = new Vector3(pos_x,pos_y,pos_z);
+                current_object.transform.localPosition = new Vector3(pos_x, pos_y, pos_z);
                 current_object.transform.localRotation *= Quaternion.Euler(rot_x, rot_y, rot_z);
             }
-            else {
+            else
+            {
                 Debug.Log("Object does not exist");
             }
-            mainFin.Set();    
+            mainFin.Set();
         });
         mainFin.Wait();
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
-    static void step_simulation_without_physics(string[] param){
+    static void step_simulation_without_physics(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Invokes the move method of the agent and steps simulation
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        float x = float.Parse(param[0],CultureInfo.InvariantCulture);
-        float y = float.Parse(param[1],CultureInfo.InvariantCulture);
-        float yaw = float.Parse(param[2],CultureInfo.InvariantCulture);
+        float x = float.Parse(param[0], CultureInfo.InvariantCulture);
+        float y = float.Parse(param[1], CultureInfo.InvariantCulture);
+        float yaw = float.Parse(param[2], CultureInfo.InvariantCulture);
 
         //waiting till the main Thread is finished
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false);
-        RunOnMainThread(() =>  {
+        RunOnMainThread(() =>
+        {
             agent.move(x, y, yaw);
-            mainFin.Set(); 
+            mainFin.Set();
         });
         mainFin.Wait();
-        controlStream.Write(aknBytes, 0, aknBytes.Length);    
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
-    static void get_image_info(string[] param){
+    static void get_image_info(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Retrieves the format data of the image
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        string image_info = JsonUtility.ToJson(new ImageInfo {width = agent.get_image_info()[0], height=agent.get_image_info()[1], channels=3, format="rgb"});
+        string image_info = JsonUtility.ToJson(new ImageInfo { width = agent.get_image_info()[0], height = agent.get_image_info()[1], channels = 3, format = "rgb" });
         byte[] image_info_bytes = Encoding.UTF8.GetBytes(image_info);
         send_data(dataStream, image_info_bytes);
         // wait for akn for data socket 
-        while(!data_akn_recieved){};
+        while (!data_akn_recieved) { };
         data_akn_recieved = false;
-        controlStream.Write(aknBytes, 0, aknBytes.Length);   
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
-    static void get_image(string[] param){
+    static void get_image(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Retrieves the image the agent is currently seeing
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        byte[,] image = new byte[1,1];
-        RunOnMainThread(() => {
+        int[,] image = new int[1, 1];
+        RunOnMainThread(() =>
+        {
             image = agent.get_image();
         });
-        while(image.GetLength(0) == 1){};
+        while (image.GetLength(0) == 1) { };
         // convert image array into byte array for transfer
         int rows = image.GetLength(0);
         int cols = image.GetLength(1);
         int elements = rows * cols;
-
+        // elements * 4 because each int takes up 4 bytes
         byte[] byteArray = new byte[elements];
-        for (int i = 0; i < rows; i++){
-            for(int j = 0; j < cols; j++){
-                byteArray[i*cols+j] = (byte)image[i,j];
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                byteArray[i * cols + j] = (byte)image[i, j];
             }
         }
         Debug.Log(byteArray.Length);
         send_data(videoStream, byteArray);
 
         //videoStream.Write(byteArray, 0, byteArray.Length);
-        while(!img_akn_recieved){};
+        while (!img_akn_recieved) { };
         img_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
 
     }
-    
-    
-    private static void RunOnMainThread(Action action) {
+
+
+    private static void RunOnMainThread(Action action)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Checks if the thread that called this function is already the main
@@ -344,11 +372,13 @@ public class Main
         /// </summary>
         /// <param name="action">The action that will be run on the main thread </param>
         //---------------------------------------------------------------------
-        if (SynchronizationContext.Current == mainThreadContext) {  
+        if (SynchronizationContext.Current == mainThreadContext)
+        {
             // If already on main thread, execute immediately
             action();
         }
-        else {
+        else
+        {
             // Otherwise, enqueue the action for the main thread
             mainThreadActions.Enqueue(action);
             mainThreadContext.Post(_ => ProcessMainThreadActions(), null);
@@ -356,18 +386,21 @@ public class Main
 
     }
 
-    private static void ProcessMainThreadActions() {   
+    private static void ProcessMainThreadActions()
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Dequeues the actions and invokes them on the main thread
         /// </summary>
         //---------------------------------------------------------------------
-        while (mainThreadActions.TryDequeue(out Action action)){       
+        while (mainThreadActions.TryDequeue(out Action action))
+        {
             action.Invoke();
         }
 
     }
-    private static void createAgent(Scene scene, LoadSceneMode mode){
+    private static void createAgent(Scene scene, LoadSceneMode mode)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Creates an agent if he doesn't exits
@@ -376,20 +409,23 @@ public class Main
 
         GameObject agent_object = GameObject.Find("agent");
         // check if name of agent exist
-        if (agent_object == null){
+        if (agent_object == null)
+        {
             agent_object = GameObject.CreatePrimitive(PrimitiveType.Cube);
             agent_object.name = "agent";
-            Debug.Log("agent created");            
+            Debug.Log("agent created");
         }
 
-        if(agent_object.GetComponent<Agent>() == null){
+        if (agent_object.GetComponent<Agent>() == null)
+        {
             agent_object.AddComponent<Agent>();
         }
 
         agent = agent_object.GetComponent<Agent>();
     }
 
-    private static void LoadAssetBundles(string folderPath){
+    private static void LoadAssetBundles(string folderPath)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// Loads the AssetBundles from the given path into a list to load
@@ -397,13 +433,14 @@ public class Main
         /// </summary>
         /// <param name="folderPath">The path to the folder where the bundles are located </param>
         //---------------------------------------------------------------------
-        if(!Directory.Exists(folderPath)){
+        if (!Directory.Exists(folderPath))
+        {
             Debug.Log("Directory does not exist: " + folderPath);
             return;
         }
         // get all file paths of directory
         string[] bundleFiles = Directory.GetFiles(folderPath);
-        foreach(string filePath in bundleFiles)
+        foreach (string filePath in bundleFiles)
         {
             AssetBundle bundle = AssetBundle.LoadFromFile(filePath);
             loadedBundles.Add(bundle);
@@ -411,7 +448,8 @@ public class Main
 
     }
 
-    private static void get_illumination(string[] param){
+    private static void get_illumination(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// retrievees the color of a specified light source
@@ -420,14 +458,17 @@ public class Main
         //---------------------------------------------------------------------
         float[] color = null;
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
-        RunOnMainThread(() =>  {   
+        RunOnMainThread(() =>
+        {
             // access to Game Objects and their data can only be on main Thread
             GameObject lightGameObject = GameObject.Find(param[0]);
-            if (lightGameObject.GetComponent<Light>() != null){
+            if (lightGameObject.GetComponent<Light>() != null)
+            {
                 Light light = lightGameObject.GetComponent<Light>();
-                color = new float[] {light.color.r, light.color.g, light.color.b};
+                color = new float[] { light.color.r, light.color.g, light.color.b };
             }
-            else{
+            else
+            {
                 Debug.Log("Object has no Light source");
             }
             mainFin.Set();
@@ -438,37 +479,14 @@ public class Main
         illumiInfo.colors = color;
         string illumiInfoString = JsonUtility.ToJson(illumiInfo);
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(illumiInfoString);
-        send_data(dataStream,all_info_bytes);
-        while(!data_akn_recieved){};
+        send_data(dataStream, all_info_bytes);
+        while (!data_akn_recieved) { };
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
 
-    private static void set_illumination(string[] param){
-        int[] rgbVal  = {int.Parse(param[1]), int.Parse(param[2]), int.Parse(param[3])};
-	    float[] rgbNew = new float[3];
-	    for(int i = 0; i < rgbVal.Length; i++){
-		    rgbNew[i] = rgbVal[i] / 255f;
-		}
-        ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
-        RunOnMainThread(() =>  {   
-            //access to Game Objects and their data can only be on main Thread
-            GameObject lightGameObject = GameObject.Find(param[0]);
-
-		    if(lightGameObject.GetComponent<Light>() != null){
-                Light light = lightGameObject.GetComponent<Light>();
-		        light.color = new Color(rgbNew[0], rgbNew[1], rgbNew[2]); 
-            }
-            else{
-                Debug.Log("Object has no light source");
-            }
-            mainFin.Set(); 
-        });
-        mainFin.Wait();
-        controlStream.Write(aknBytes, 0, aknBytes.Length);
-    }
-
-    private static void get_objects(string[] param){
+    private static void get_objects(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// gets all the Game Objects in the current unity scene and sends them back in a Dictionary
@@ -478,14 +496,16 @@ public class Main
         GameObject[] all_Objects = null;
         ObjectInfo objectInfo = new ObjectInfo();
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
-        RunOnMainThread(() =>  {    //FindObjectsOfType and getter for Game Object can only run on main Thread
-        
+        RunOnMainThread(() =>
+        {    //FindObjectsOfType and getter for Game Object can only run on main Thread
+
             all_Objects = GameObject.FindObjectsOfType<GameObject>();
             List<string> keyList = new List<string>();
             List<string> nameList = new List<string>();
             List<string> valueList = new List<string>();
 
-            foreach(GameObject go in all_Objects){
+            foreach (GameObject go in all_Objects)
+            {
                 keyList.Add(go.GetInstanceID().ToString());
                 nameList.Add(go.name);
                 valueList.Add(go.GetType().ToString());
@@ -494,7 +514,7 @@ public class Main
             objectInfo.keys = keyList.ToArray();
             objectInfo.names = nameList.ToArray();
             objectInfo.values = valueList.ToArray();
-            mainFin.Set();    
+            mainFin.Set();
         });
 
         mainFin.Wait();
@@ -503,42 +523,47 @@ public class Main
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(all_info_string);
 
 
-        string bytesize = all_info_bytes.Length.ToString();    
+        string bytesize = all_info_bytes.Length.ToString();
         byte[] all_info_bytes_length = Encoding.UTF8.GetBytes(bytesize);
-                
-        send_data(dataStream,all_info_bytes_length);
-        while(!data_akn_recieved){};
+
+        send_data(dataStream, all_info_bytes_length);
+        while (!data_akn_recieved) { };
         data_akn_recieved = false;
         send_data(dataStream, all_info_bytes);
         //aknowledgement for sending both
-        while(!data_akn_recieved){};
+        while (!data_akn_recieved) { };
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
-        
+
     }
-    private static void get_position(string[] param){
+    private static void get_position(string[] param)
+    {
         //---------------------------------------------------------------------
         /// <summary>
         /// get the Id of a object and sends the pose back as array
         /// </summary>
         /// <param name="param"> The array of parameters </param>
         //---------------------------------------------------------------------
+
+
         //init pose
-        float[] coor = new float[] {float.NaN,float.NaN,float.NaN,float.NaN,float.NaN,float.NaN};
+        float[] coor = new float[] { float.NaN, float.NaN, float.NaN, float.NaN, float.NaN, float.NaN };
 
         //waiting till the main Thread is finished
         ManualResetEventSlim mainFin = new ManualResetEventSlim(false);
 
-        RunOnMainThread(() =>  {
+        RunOnMainThread(() =>
+        {
             GameObject current_object = GameObject.Find("/" + param[0]);
-            if (current_object != null){
+            if (current_object != null)
+            {
                 //get the pose
-                coor[0]=current_object.transform.localPosition.x;
-                coor[1]=current_object.transform.localPosition.z;
-                coor[2]=current_object.transform.localPosition.y;
+                coor[0] = current_object.transform.localPosition.x;
+                coor[1] = current_object.transform.localPosition.z;
+                coor[2] = current_object.transform.localPosition.y;
 
                 //convert Quanterion into EulerAngle
-                Vector3 rotation = current_object.transform.localRotation.eulerAngles; 
+                Vector3 rotation = current_object.transform.localRotation.eulerAngles;
                 coor[3] = rotation.x;
                 coor[4] = rotation.y;
                 coor[5] = rotation.z;
@@ -548,33 +573,20 @@ public class Main
         mainFin.Wait();
         //init new class
         Pose pose = new Pose();
-        pose.poses=coor;
+        pose.poses = coor;
         //convert to Json
         string poseInfo = JsonUtility.ToJson(pose);
         byte[] all_info_bytes = Encoding.UTF8.GetBytes(poseInfo);
-        send_data(dataStream,all_info_bytes);
-        while(!data_akn_recieved){};
+        send_data(dataStream, all_info_bytes);
+        while (!data_akn_recieved) { };
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
-    private static void stop(string[] param){
-        //---------------------------------------------------------------------
-        /// <summary>
-        /// This function will stop the unity simulator. It will not send 
-        /// back an acknowledgement.
-        /// </summary>
-        /// <param name="param"> The array of parameters </param>
-        //---------------------------------------------------------------------
-        RunOnMainThread(() => {
-            Application.Quit();
-        });
-        
-    }
-
 }
 
 [System.Serializable]
-public class Command{
+public class Command
+{
     //---------------------------------------------------------------------
     /// <summary>
     /// Class for decoding and storing json commands
@@ -610,7 +622,7 @@ public class ObjectInfo
     public string[] keys;
     public string[] names;
     public string[] values;
-    
+
 
 }
 
