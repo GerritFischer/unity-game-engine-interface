@@ -594,6 +594,19 @@ public class Main
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
+
+    private static void stop(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// This function will stop the unity simulator. It will not send 
+        /// back an acknowledgement.
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        RunOnMainThread(() => {
+            Application.Quit();
+        });  
+    }
 }
 
 [System.Serializable]
