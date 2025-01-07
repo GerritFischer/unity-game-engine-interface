@@ -5,8 +5,10 @@ from unity import UnitySimulator
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QPainter, QImage
 from PyQt6.QtWidgets import QApplication, QWidget
+import numpy as np
 import sys
 import math
+
 
 
 def single_run() -> None:
@@ -46,7 +48,7 @@ def single_run() -> None:
             pose, arr = simulator.move_agent(0, 0, 1)
             #print("agent pose:" + str(pose))
             simulator.move_object("test_0", (-3, 0, 0, 1, 1, 1))
-            simulator.set_illumination("Directional Light", [math.floor(pose[4] / 360 * 255.0), 0, 0])
+            simulator.set_illumination("Directional Light", np.array([math.floor(pose[4] / 360 * 255.0), 0, 0]))
             #print("current illumination " + str(simulator.get_illumination("Directional Light")))
             # generate qimage
             self.qimage = QImage(arr.data, arr.shape[1], arr.shape[0], arr.shape[1] * 3, QImage.Format.Format_RGB888)
