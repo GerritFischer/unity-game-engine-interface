@@ -332,29 +332,31 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        int[,] image = new int[1, 1];
+        byte[,] image = new byte[1,1];
+        //waiting till the main Thread is finished
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false);
         RunOnMainThread(() =>
         {
             image = agent.get_image();
+            mainFin.Set();
         });
-        while (image.GetLength(0) == 1) { };
+        mainFin.Wait();
         // convert image array into byte array for transfer
         int rows = image.GetLength(0);
         int cols = image.GetLength(1);
         int elements = rows * cols;
-        // elements * 4 because each int takes up 4 bytes
-        byte[] byteArray = new byte[elements];
+        // converting the 2d pixel array to a normal 1d array
+        // so it can be sent as a byte string
+        byte[] image_as_array = new byte[elements];
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
             {
-                byteArray[i * cols + j] = (byte)image[i, j];
+                image_as_array[i * cols + j] = image[i, j];
             }
         }
-        Debug.Log(byteArray.Length);
-        send_data(videoStream, byteArray);
-
-        //videoStream.Write(byteArray, 0, byteArray.Length);
+        send_data(videoStream, image_as_array);
+        //wait for acknowledge
         while (!img_akn_recieved) { };
         img_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
@@ -592,6 +594,19 @@ public class Main
         data_akn_recieved = false;
         controlStream.Write(aknBytes, 0, aknBytes.Length);
     }
+
+    private static void stop(string[] param){
+        //---------------------------------------------------------------------
+        /// <summary>
+        /// This function will stop the unity simulator. It will not send 
+        /// back an acknowledgement.
+        /// </summary>
+        /// <param name="param"> The array of parameters </param>
+        //---------------------------------------------------------------------
+        RunOnMainThread(() => {
+            Application.Quit();
+        });  
+    }
 }
 
 [System.Serializable]
@@ -632,13 +647,7 @@ public class ObjectInfo
     public string[] keys;
     public string[] names;
     public string[] values;
-<<<<<<< unity-simulator/Assets/Main.cs
-
-=======
     public short[] properties;
-    
->>>>>>> unity-simulator/Assets/Main.cs
-
 }
 
 [System.Serializable]
