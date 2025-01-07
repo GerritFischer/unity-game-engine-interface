@@ -323,9 +323,9 @@ class UnitySimulator(Simulator):
         '''
 
         assert color.size == 3,"The array should have three elements"
-        assert color[0]<=255 and color[0]>=0 and isinstance(color[0],int), "The first value of color is invalid"
-        assert color[1]<=255 and color[1]>=0 and isinstance(color[1],int), "The second value of color is invalid"
-        assert color[2]<=255 and color[2]>=0 and isinstance(color[2],int), "The third value of color is invalid"
+        assert color[0]<=255 and color[0]>=0 and isinstance(color[0],(int, np.int64)), "The first value of color is invalid"
+        assert color[1]<=255 and color[1]>=0 and isinstance(color[1],(int, np.int64)), "The second value of color is invalid"
+        assert color[2]<=255 and color[2]>=0 and isinstance(color[2],(int, np.int64)), "The third value of color is invalid"
         arr: list = color.tolist()
         self.control_socket.send(json.dumps({'command': 'set_illumination', "param": [light_source, arr[0], arr[1], arr[2]]}).encode('utf-8'))
         self.control_socket.recv(50)

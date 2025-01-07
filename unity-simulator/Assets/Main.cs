@@ -332,7 +332,7 @@ public class Main
         /// </summary>
         /// <param name="param">The array of parameters</param>
         //---------------------------------------------------------------------
-        int[,] image = new int[1, 1];
+        byte[,] image = new byte[1, 1];
         RunOnMainThread(() =>
         {
             image = agent.get_image();
@@ -546,6 +546,29 @@ public class Main
         controlStream.Write(aknBytes, 0, aknBytes.Length);
 
     }
+    private static void set_illumination(string[] param){
+        int[] rgbVal  = {int.Parse(param[1]), int.Parse(param[2]), int.Parse(param[3])};
+        float[] rgbNew = new float[3];
+        for(int i = 0; i < rgbVal.Length; i++){
+            rgbNew[i] = rgbVal[i] / 255f;
+        }
+        ManualResetEventSlim mainFin = new ManualResetEventSlim(false); //waiting till the main Thread is finished
+        RunOnMainThread(() =>  {   
+            //access to Game Objects and their data can only be on main Thread
+            GameObject lightGameObject = GameObject.Find(param[0]);
+
+            if(lightGameObject.GetComponent<Light>() != null){
+                Light light = lightGameObject.GetComponent<Light>();
+                light.color = new Color(rgbNew[0], rgbNew[1], rgbNew[2]); 
+            }
+            else{
+                Debug.Log("Object has no light source");
+            }
+            mainFin.Set(); 
+        });
+        mainFin.Wait();
+        controlStream.Write(aknBytes, 0, aknBytes.Length);
+    }
     private static void get_position(string[] param)
     {
         //---------------------------------------------------------------------
@@ -632,13 +655,7 @@ public class ObjectInfo
     public string[] keys;
     public string[] names;
     public string[] values;
-<<<<<<< unity-simulator/Assets/Main.cs
-
-=======
     public short[] properties;
-    
->>>>>>> unity-simulator/Assets/Main.cs
-
 }
 
 [System.Serializable]
